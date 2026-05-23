@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — College ERP</title>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="../erp-theme.css" />
+  <link rel="stylesheet" href="../colleges/pvg/config.css" />
+
+  <style>
+    /* ── Chart bar (lightweight, no library needed for simple bars) ── */
+    .chart-bars {
+      display: flex; align-items: flex-end; gap: 6px;
+      height: 120px; padding: 0 4px;
+    }
+    .chart-bar-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; }
+    .chart-bar {
+      width: 100%; border-radius: 4px 4px 0 0;
+      background: var(--erp-primary); opacity: .7;
+      transition: opacity var(--erp-transition);
+    }
+    .chart-bar:hover { opacity: 1; }
+    .chart-bar.alt { background: var(--erp-accent); }
+    .chart-label { font-size: 9px; color: var(--erp-text-muted); font-weight: 600; }
+
+    /* ── Progress bars ── */
+    .prog-row { display: flex; flex-direction: column; gap: 10px; }
+    .prog-item { display: flex; flex-direction: column; gap: 5px; }
+    .prog-head { display: flex; justify-content: space-between; font-size: 12.5px; }
+    .prog-head span:first-child { font-weight: 600; color: var(--erp-dark); }
+    .prog-head span:last-child  { font-weight: 700; color: var(--erp-primary); }
+    .prog-track { height: 7px; background: var(--erp-border); border-radius: 10px; overflow: hidden; }
+    .prog-fill  { height: 100%; border-radius: 10px; background: var(--erp-primary); transition: width 1s ease; }
+
+    /* ── Calendar widget ── */
+    .cal-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 2px; }
+    .cal-day-name { font-size: 9px; font-weight: 700; color: var(--erp-text-muted); text-align: center; padding: 4px 0; letter-spacing: .5px; }
+    .cal-day {
+      font-size: 11px; font-weight: 500; text-align: center;
+      padding: 5px 2px; border-radius: 5px; cursor: pointer;
+      color: var(--erp-text); transition: all var(--erp-transition);
+    }
+    .cal-day:hover   { background: color-mix(in srgb, var(--erp-primary) 10%, white); color: var(--erp-primary); }
+    .cal-day.today   { background: var(--erp-primary); color: #fff; font-weight: 700; }
+    .cal-day.has-event::after { content:''; display:block; width:4px;height:4px;border-radius:50%;background:var(--erp-accent);margin:1px auto 0; }
+    .cal-day.other-month { color: #ccc; }
+    .cal-day.holiday { color: var(--erp-danger); font-weight: 600; }
+
+    /* ── Upcoming events ── */
+    .event-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px 0; border-bottom: 1px solid #f0f2f5; }
+    .event-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .event-date { width: 42px; text-align: center; flex-shrink: 0; background: var(--erp-surface); border-radius: 8px; padding: 6px 4px; border: 1px solid var(--erp-border); }
+    .event-date strong { display: block; font-size: 18px; font-weight: 800; color: var(--erp-primary); line-height: 1; }
+    .event-date span   { font-size: 9px; font-weight: 600; color: var(--erp-text-muted); text-transform: uppercase; letter-spacing: .6px; }
+    .event-info p      { font-size: 13px; font-weight: 600; color: var(--erp-dark); }
+    .event-info span   { font-size: 11.5px; color: var(--erp-text-muted); }
+  </style>
+</head>
+<body>
+
+<!-- ════════════ SIDEBAR ════════════ -->
+<aside class="erp-sidebar">
+  <div class="erp-sidebar__brand">
+    <img class="erp-sidebar__logo" data-erp-logo="icon" alt="Logo" />
+    <div class="erp-sidebar__brand-text">
+      <h2 data-erp-college-name="short"></h2>
+      <span>ERP Portal</span>
+    </div>
+  </div>
+
+  <nav class="erp-sidebar__nav">
+    <div class="erp-nav-label">Main</div>
+    <a class="erp-nav-item erp-nav-item--active" href="02-dashboard.html">
+      <i class="fa-solid fa-gauge-high"></i><span class="erp-nav-item__text">Dashboard</span>
+    </a>
+    <a class="erp-nav-item" href="#"><i class="fa-solid fa-users"></i><span class="erp-nav-item__text">Students</span><span class="erp-badge">12</span></a>
+    <a class="erp-nav-item" href="#"><i class="fa-solid fa-chalkboard-user"></i><span class="erp-nav-item__text">Faculty</span></a>
+    <a class="erp-nav-item" href="#"><i class="fa-solid fa-building-columns"></i><span class="erp-nav-item__text">Departments</span></a>
+
+    <div class="erp-nav-label">Academic</div>
+    <a class="erp-nav-item" href="#"><i class="fa-solid fa-book-open"></i><span class="erp-nav-item__text">Courses</span></a>
+    <a class="erp-nav-item" href="#"><i class="fa-solid fa-calendar-days"></i><span class="erp-nav-item__text">Time Table</span></a>
+    <a class="erp-nav-item" href="#"><i class="fa-solid fa-clipboard-list"></i><span class="erp-nav-item__text">Attendance</span></a>
+    <a class="erp-nav-item" href="03-admission-form.html"><i class="fa-solid fa-file-pen"></i><span class="erp-nav-item__text">Admissions</span></a>
+    <a class="erp-nav-item" href="#"><i class="fa-solid fa-file-pen"></i><span class="erp-nav-item__text">Examinations</span><span class="erp-badge">3</span></a>
+    <a class="erp-nav-item" href="#"><i class="fa-solid fa-chart-bar"></i><span class="erp-nav-item__text">Results</span></a>
+
+    <div class="erp-nav-label">Administration</div>
+    <a class="erp-nav-item" href="#"><i class="fa-solid fa-indian-rupee-sign"></i><span class="erp-nav-item__text">Fees &amp; Finance</span></a>
+    <a class="erp-nav-item" href="04-notifications.html"><i class="fa-solid fa-bell"></i><span class="erp-nav-item__text">Notifications</span></a>
+    <a class="erp-nav-item" href="#"><i class="fa-solid fa-gear"></i><span class="erp-nav-item__text">Settings</span></a>
+  </nav>
+
+  <div class="erp-sidebar__footer">
+    <div class="erp-avatar erp-avatar--md">AD</div>
+    <div class="erp-sidebar__user-info"><p>Admin User</p><span>Super Admin</span></div>
+    <i class="fa-solid fa-right-from-bracket erp-sidebar__logout"
+       onclick="ERP.Confirm.show({title:'Sign Out',message:'Are you sure you want to sign out?',onConfirm:()=>ERP.Toast.show('Signed out','info')})"></i>
+  </div>
+</aside>
+
+<!-- ════════════ TOPBAR ════════════ -->
+<header class="erp-topbar">
+  <button class="erp-topbar__btn" data-erp-sidebar-toggle title="Toggle Sidebar">
+    <i class="fa-solid fa-bars"></i>
+  </button>
+
+  <nav class="erp-topbar__breadcrumb" data-erp-breadcrumb></nav>
+
+  <div class="erp-topbar__search">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <input type="text" placeholder="Search students, faculty, courses…" />
+  </div>
+
+  <div class="erp-topbar__actions">
+    <div style="position:relative">
+      <button class="erp-topbar__btn" data-erp-notif-toggle title="Notifications">
+        <i class="fa-regular fa-bell"></i><span class="erp-dot"></span>
+      </button>
+      <div class="erp-notif-panel">
+        <div class="erp-notif-panel__header">
+          <h4>Notifications</h4>
+          <span class="erp-notif-panel__mark-read">Mark all read</span>
+        </div>
+        <div class="erp-notif-item erp-notif-item--unread">
+          <div class="erp-activity__icon erp-activity__icon--primary" style="width:32px;height:32px;border-radius:8px;font-size:13px;flex-shrink:0"><i class="fa-solid fa-user-plus"></i></div>
+          <div class="erp-notif-item__text"><p>New student <strong>Alex Kumar</strong> enrolled</p><time>2 min ago</time></div>
+        </div>
+        <div class="erp-notif-item erp-notif-item--unread">
+          <div class="erp-activity__icon erp-activity__icon--amber" style="width:32px;height:32px;border-radius:8px;font-size:13px;flex-shrink:0"><i class="fa-solid fa-triangle-exclamation"></i></div>
+          <div class="erp-notif-item__text"><p>Attendance below 75% — <strong>Raj Desai</strong></p><time>1 hr ago</time></div>
+        </div>
+        <div class="erp-notif-item">
+          <div class="erp-activity__icon erp-activity__icon--green" style="width:32px;height:32px;border-radius:8px;font-size:13px;flex-shrink:0"><i class="fa-solid fa-indian-rupee-sign"></i></div>
+          <div class="erp-notif-item__text"><p>Fee ₹55,000 received from <strong>Priya Mehta</strong></p><time>3 hrs ago</time></div>
+        </div>
+      </div>
+    </div>
+    <button class="erp-topbar__btn" onclick="ERP.Toast.show('No new messages','info')"><i class="fa-regular fa-envelope"></i></button>
+  </div>
+
+  <div class="erp-topbar__profile">
+    <div class="erp-avatar erp-avatar--md">AD</div>
+    <div class="erp-profile-info"><p>Admin User</p><span>Super Admin</span></div>
+    <i class="fa-solid fa-chevron-down"></i>
+  </div>
+</header>
+
+<!-- ════════════ MAIN ════════════ -->
+<main class="erp-main" data-erp-page="Dashboard">
+
+  <div class="erp-page-title" style="display:flex;align-items:flex-start;justify-content:space-between">
+    <div>
+      <h1>Dashboard</h1>
+      <p>Academic Year 2025–26 · Last updated: Today, 9:12 AM</p>
+    </div>
+    <div style="display:flex;gap:10px">
+      <button class="erp-btn erp-btn--ghost erp-btn--sm" onclick="ERP.Toast.show('Report exported','success')">
+        <i class="fa-solid fa-download"></i> Export
+      </button>
+      <button class="erp-btn erp-btn--primary erp-btn--sm">
+        <i class="fa-solid fa-plus"></i> New Record
+      </button>
+    </div>
+  </div>
+
+  <!-- STAT CARDS -->
+  <div class="erp-stats-grid erp-mb-6">
+    <div class="erp-stat-card erp-stat-card--primary">
+      <div class="erp-stat-card__header">
+        <div class="erp-stat-card__icon"><i class="fa-solid fa-users"></i></div>
+        <span class="erp-stat-card__trend erp-stat-card__trend--up"><i class="fa-solid fa-arrow-trend-up"></i>+4.2%</span>
+      </div>
+      <div class="erp-stat-card__value">2,847</div>
+      <div class="erp-stat-card__label">Total Students</div>
+    </div>
+    <div class="erp-stat-card erp-stat-card--success" style="animation-delay:.05s">
+      <div class="erp-stat-card__header">
+        <div class="erp-stat-card__icon"><i class="fa-solid fa-chalkboard-user"></i></div>
+        <span class="erp-stat-card__trend erp-stat-card__trend--up"><i class="fa-solid fa-arrow-trend-up"></i>+2.1%</span>
+      </div>
+      <div class="erp-stat-card__value">148</div>
+      <div class="erp-stat-card__label">Faculty Members</div>
+    </div>
+    <div class="erp-stat-card erp-stat-card--warning" style="animation-delay:.1s">
+      <div class="erp-stat-card__header">
+        <div class="erp-stat-card__icon"><i class="fa-solid fa-clipboard-check"></i></div>
+        <span class="erp-stat-card__trend erp-stat-card__trend--down"><i class="fa-solid fa-arrow-trend-down"></i>−1.8%</span>
+      </div>
+      <div class="erp-stat-card__value">86.4%</div>
+      <div class="erp-stat-card__label">Avg. Attendance</div>
+    </div>
+    <div class="erp-stat-card erp-stat-card--danger" style="animation-delay:.15s">
+      <div class="erp-stat-card__header">
+        <div class="erp-stat-card__icon"><i class="fa-solid fa-briefcase"></i></div>
+        <span class="erp-stat-card__trend erp-stat-card__trend--up"><i class="fa-solid fa-arrow-trend-up"></i>+18%</span>
+      </div>
+      <div class="erp-stat-card__value">312</div>
+      <div class="erp-stat-card__label">Placed (2024–25)</div>
+    </div>
+  </div>
+
+  <!-- ROW: Chart + Progress + Calendar -->
+  <div style="display:grid;grid-template-columns:1fr 280px 260px;gap:24px;margin-bottom:28px">
+
+    <!-- Enrolment Chart -->
+    <div class="erp-card">
+      <div class="erp-card__header">
+        <div><div class="erp-card__title">Monthly Enrolments</div><div class="erp-card__subtitle">New students admitted per month</div></div>
+        <select class="erp-form-control" style="width:auto;font-size:12px;padding:5px 10px">
+          <option>2025–26</option><option>2024–25</option>
+        </select>
+      </div>
+      <div class="erp-card__body">
+        <div class="chart-bars" id="enrolChart"></div>
+        <div style="display:flex;gap:16px;margin-top:12px">
+          <span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--erp-text-muted)">
+            <span style="width:10px;height:10px;border-radius:2px;background:var(--erp-primary);display:inline-block"></span>Admitted
+          </span>
+          <span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--erp-text-muted)">
+            <span style="width:10px;height:10px;border-radius:2px;background:var(--erp-accent);display:inline-block"></span>Target
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dept Progress -->
+    <div class="erp-card">
+      <div class="erp-card__header">
+        <div><div class="erp-card__title">Enrolment by Dept</div><div class="erp-card__subtitle">% of intake filled</div></div>
+      </div>
+      <div class="erp-card__body">
+        <div class="prog-row" id="deptProgress"></div>
+      </div>
+    </div>
+
+    <!-- Calendar -->
+    <div class="erp-card">
+      <div class="erp-card__header">
+        <div style="display:flex;align-items:center;justify-content:space-between;width:100%">
+          <button style="background:none;border:none;cursor:pointer;color:var(--erp-text-muted);font-size:14px"><i class="fa-solid fa-chevron-left"></i></button>
+          <div class="erp-card__title" id="calTitle" style="font-size:13px"></div>
+          <button style="background:none;border:none;cursor:pointer;color:var(--erp-text-muted);font-size:14px"><i class="fa-solid fa-chevron-right"></i></button>
+        </div>
+      </div>
+      <div class="erp-card__body" style="padding-top:10px">
+        <div class="cal-grid" id="calGrid"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABLE + ACTIVITY + UPCOMING -->
+  <div style="display:grid;grid-template-columns:1fr 300px;gap:24px;margin-bottom:28px">
+
+    <!-- Student table -->
+    <div class="erp-card">
+      <div class="erp-card__header">
+        <div><div class="erp-card__title">Recent Admissions</div><div class="erp-card__subtitle">Latest enrollments this semester</div></div>
+        <a href="03-admission-form.html" class="erp-card__action">View All <i class="fa-solid fa-arrow-right"></i></a>
+      </div>
+      <table class="erp-table" data-erp-sortable>
+        <thead>
+          <tr><th>Student</th><th>Department</th><th>Year</th><th>Fees</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><div style="display:flex;align-items:center;gap:10px"><div class="erp-avatar" style="width:32px;height:32px;font-size:12px">AK</div><div><div style="font-weight:600;font-size:13px;color:var(--erp-dark)">Alex Kumar</div><div style="font-size:11px;color:var(--erp-text-muted)">ERP/CS/2025/001</div></div></div></td>
+            <td><span class="erp-dept erp-dept--1">Comp. Sci.</span></td>
+            <td>1st Year</td>
+            <td><span class="erp-pill erp-pill--active">Paid</span></td>
+            <td><span class="erp-pill erp-pill--active">Active</span></td>
+          </tr>
+          <tr>
+            <td><div style="display:flex;align-items:center;gap:10px"><div class="erp-avatar" style="width:32px;height:32px;font-size:12px;background:var(--erp-success)">SP</div><div><div style="font-weight:600;font-size:13px;color:var(--erp-dark)">Sara Patel</div><div style="font-size:11px;color:var(--erp-text-muted)">ERP/ME/2025/014</div></div></div></td>
+            <td><span class="erp-dept erp-dept--2">Mechanical</span></td>
+            <td>2nd Year</td>
+            <td><span class="erp-pill erp-pill--active">Paid</span></td>
+            <td><span class="erp-pill erp-pill--active">Active</span></td>
+          </tr>
+          <tr>
+            <td><div style="display:flex;align-items:center;gap:10px"><div class="erp-avatar" style="width:32px;height:32px;font-size:12px;background:var(--erp-warning);color:#333">RD</div><div><div style="font-weight:600;font-size:13px;color:var(--erp-dark)">Raj Desai</div><div style="font-size:11px;color:var(--erp-text-muted)">ERP/EE/2025/007</div></div></div></td>
+            <td><span class="erp-dept erp-dept--3">Electrical</span></td>
+            <td>3rd Year</td>
+            <td><span class="erp-pill erp-pill--pending">Partial</span></td>
+            <td><span class="erp-pill erp-pill--pending">Pending</span></td>
+          </tr>
+          <tr>
+            <td><div style="display:flex;align-items:center;gap:10px"><div class="erp-avatar" style="width:32px;height:32px;font-size:12px;background:#8b5cf6">PM</div><div><div style="font-weight:600;font-size:13px;color:var(--erp-dark)">Priya Mehta</div><div style="font-size:11px;color:var(--erp-text-muted)">ERP/IT/2025/022</div></div></div></td>
+            <td><span class="erp-dept erp-dept--4">IT</span></td>
+            <td>Final</td>
+            <td><span class="erp-pill erp-pill--active">Paid</span></td>
+            <td><span class="erp-pill erp-pill--active">Active</span></td>
+          </tr>
+          <tr>
+            <td><div style="display:flex;align-items:center;gap:10px"><div class="erp-avatar" style="width:32px;height:32px;font-size:12px;background:var(--erp-danger)">YS</div><div><div style="font-weight:600;font-size:13px;color:var(--erp-dark)">Yash Shah</div><div style="font-size:11px;color:var(--erp-text-muted)">ERP/EC/2025/031</div></div></div></td>
+            <td><span class="erp-dept erp-dept--5">Electronics</span></td>
+            <td>3rd Year</td>
+            <td><span class="erp-pill erp-pill--danger">Due</span></td>
+            <td><span class="erp-pill erp-pill--active">Active</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Upcoming events -->
+    <div class="erp-card">
+      <div class="erp-card__header">
+        <div><div class="erp-card__title">Upcoming Events</div><div class="erp-card__subtitle">Next 7 days</div></div>
+      </div>
+      <div class="erp-card__body" style="padding-top:10px">
+        <div class="event-item">
+          <div class="event-date"><strong>07</strong><span>Apr</span></div>
+          <div class="event-info"><p>Mid-Sem Exam — CS Dept</p><span><i class="fa-solid fa-location-dot" style="font-size:10px"></i> Main Hall A, B</span></div>
+        </div>
+        <div class="event-item">
+          <div class="event-date"><strong>09</strong><span>Apr</span></div>
+          <div class="event-info"><p>Fee Payment Deadline</p><span><i class="fa-solid fa-triangle-exclamation" style="font-size:10px;color:var(--erp-warning)"></i> 42 students pending</span></div>
+        </div>
+        <div class="event-item">
+          <div class="event-date"><strong>11</strong><span>Apr</span></div>
+          <div class="event-info"><p>Placement Drive — Infosys</p><span><i class="fa-solid fa-briefcase" style="font-size:10px"></i> Seminar Hall</span></div>
+        </div>
+        <div class="event-item">
+          <div class="event-date"><strong>14</strong><span>Apr</span></div>
+          <div class="event-info"><p>Dr. Ambedkar Jayanti</p><span><i class="fa-solid fa-calendar-xmark" style="font-size:10px;color:var(--erp-danger)"></i> College Holiday</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Activity Feed -->
+  <div class="erp-card">
+    <div class="erp-card__header">
+      <div><div class="erp-card__title">System Activity Log</div><div class="erp-card__subtitle">Recent actions across all modules</div></div>
+      <button class="erp-card__action" onclick="ERP.Toast.show('Log exported','success')">
+        <i class="fa-solid fa-download"></i> Export
+      </button>
+    </div>
+    <div class="erp-activity__list">
+      <div class="erp-activity__item"><div class="erp-activity__icon erp-activity__icon--primary"><i class="fa-solid fa-user-plus"></i></div><div class="erp-activity__text"><p><strong>Alex Kumar</strong> admitted to CS dept. Added by Admin</p><div class="erp-activity__time">Today, 9:05 AM</div></div></div>
+      <div class="erp-activity__item"><div class="erp-activity__icon erp-activity__icon--green"><i class="fa-solid fa-indian-rupee-sign"></i></div><div class="erp-activity__text"><p>Fee ₹55,000 received from <strong>Priya Mehta</strong> — Receipt #INV2025041</p><div class="erp-activity__time">Today, 8:47 AM</div></div></div>
+      <div class="erp-activity__item"><div class="erp-activity__icon erp-activity__icon--amber"><i class="fa-solid fa-triangle-exclamation"></i></div><div class="erp-activity__text"><p>Auto-alert: <strong>Raj Desai</strong> attendance dropped to 68%</p><div class="erp-activity__time">Today, 8:30 AM</div></div></div>
+      <div class="erp-activity__item"><div class="erp-activity__icon erp-activity__icon--purple"><i class="fa-solid fa-file-pen"></i></div><div class="erp-activity__text"><p>Exam timetable published for <strong>CS Mid-Sem</strong> by HOD Dr. Sharma</p><div class="erp-activity__time">Yesterday, 5:15 PM</div></div></div>
+      <div class="erp-activity__item"><div class="erp-activity__icon erp-activity__icon--red"><i class="fa-solid fa-briefcase"></i></div><div class="erp-activity__text"><p>Infosys placement drive scheduled on <strong>11 Apr 2026</strong></p><div class="erp-activity__time">Yesterday, 3:00 PM</div></div></div>
+    </div>
+  </div>
+
+</main>
+
+<script src="../erp-theme.js"></script>
+<script>
+  // ── Enrolment chart ──
+  const months  = ['Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar','Apr'];
+  const actual  = [42, 85, 120, 60, 35, 18, 30, 45, 72, 90];
+  const targets = [60, 90, 110, 70, 40, 20, 35, 50, 80, 100];
+  const maxVal  = Math.max(...actual, ...targets);
+  const chart   = document.getElementById('enrolChart');
+
+  months.forEach((m, i) => {
+    chart.innerHTML += `
+      <div class="chart-bar-wrap">
+        <div class="chart-bar alt"     style="height:${(targets[i]/maxVal)*100}px" title="Target: ${targets[i]}"></div>
+        <div class="chart-bar"         style="height:${(actual[i]/maxVal)*100}px"  title="Admitted: ${actual[i]}"></div>
+        <span class="chart-label">${m}</span>
+      </div>`;
+  });
+
+  // ── Dept progress ──
+  const depts = [
+    { name: 'Comp. Sci.', pct: 92, cls: 'erp-dept--1' },
+    { name: 'Mechanical', pct: 78, cls: 'erp-dept--2' },
+    { name: 'Electrical', pct: 85, cls: 'erp-dept--3' },
+    { name: 'IT',          pct: 88, cls: 'erp-dept--4' },
+    { name: 'Electronics', pct: 70, cls: 'erp-dept--5' },
+    { name: 'AI & DS',     pct: 96, cls: 'erp-dept--6' },
+  ];
+
+  const prog = document.getElementById('deptProgress');
+  depts.forEach(d => {
+    const color = d.pct >= 90 ? 'var(--erp-success)' : d.pct >= 75 ? 'var(--erp-primary)' : 'var(--erp-warning)';
+    prog.innerHTML += `
+      <div class="prog-item">
+        <div class="prog-head"><span>${d.name}</span><span>${d.pct}%</span></div>
+        <div class="prog-track"><div class="prog-fill" style="width:${d.pct}%;background:${color}"></div></div>
+      </div>`;
+  });
+
+  // ── Mini calendar ──
+  const now = new Date();
+  const y = now.getFullYear(), mo = now.getMonth();
+  document.getElementById('calTitle').textContent =
+    now.toLocaleString('default', { month: 'long', year: 'numeric' });
+
+  const days = ['S','M','T','W','T','F','S'];
+  const holidays = [14]; const events = [7,9,11];
+  const grid = document.getElementById('calGrid');
+  days.forEach(d => { grid.innerHTML += `<div class="cal-day-name">${d}</div>`; });
+
+  const first = new Date(y, mo, 1).getDay();
+  const total = new Date(y, mo + 1, 0).getDate();
+
+  for (let i = 0; i < first; i++) {
+    const prev = new Date(y, mo, -first + i + 1).getDate();
+    grid.innerHTML += `<div class="cal-day other-month">${prev}</div>`;
+  }
+  for (let d = 1; d <= total; d++) {
+    const cls = [
+      'cal-day',
+      d === now.getDate() ? 'today' : '',
+      holidays.includes(d) ? 'holiday' : '',
+      events.includes(d)   ? 'has-event' : ''
+    ].filter(Boolean).join(' ');
+    grid.innerHTML += `<div class="${cls}">${d}</div>`;
+  }
+</script>
+</body>
+</html>

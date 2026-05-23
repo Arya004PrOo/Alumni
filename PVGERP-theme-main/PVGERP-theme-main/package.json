@@ -1,0 +1,61 @@
+{
+  "name": "college-erp-theme",
+  "version": "1.1.0",
+  "description": "Generic, college-agnostic UI theme for engineering college ERP systems. Zero institution-specific code — brand colours, fonts and logos live in per-college config files.",
+  "keywords": [
+    "erp",
+    "college",
+    "engineering",
+    "theme",
+    "css",
+    "ui",
+    "admin",
+    "dashboard"
+  ],
+  "author": "RD1991",
+  "license": "MIT",
+  "homepage": "https://github.com/RD1991/PVGERP-theme#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RD1991/PVGERP-theme.git"
+  },
+  "bugs": {
+    "url": "https://github.com/RD1991/PVGERP-theme/issues"
+  },
+  "main": "index.js",
+  "module": "index.mjs",
+  "exports": {
+    ".": {
+      "import": "./index.mjs",
+      "require": "./index.js"
+    },
+    "./css": "./erp-theme.css",
+    "./js": "./erp-theme.js",
+    "./colleges/*": "./colleges/*"
+  },
+  "files": [
+    "erp-theme.css",
+    "erp-theme.js",
+    "index.js",
+    "index.mjs",
+    "colleges/",
+    "assets/logos/"
+  ],
+  "scripts": {
+    "start": "python3 -m http.server 8080",
+    "serve": "npx serve .",
+    "prepublishOnly": "node scripts/validate.js"
+  },
+  "peerDependencies": {
+    "@fortawesome/fontawesome-free": ">=6.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@fortawesome/fontawesome-free": {
+      "optional": true
+    }
+  },
+  "devDependencies": {},
+  "engines": {
+    "node": ">=16"
+  }
+}

@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admission Form — College ERP</title>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="../erp-theme.css" />
+  <link rel="stylesheet" href="../colleges/pvg/config.css" />
+
+  <style>
+    /* ── Multi-step wizard ── */
+    .wizard-steps {
+      display: flex; align-items: center; margin-bottom: 32px;
+    }
+    .wizard-step {
+      display: flex; align-items: center; gap: 10px; flex: 1; position: relative;
+    }
+    .wizard-step:not(:last-child)::after {
+      content: ''; flex: 1; height: 2px;
+      background: var(--erp-border); margin: 0 12px;
+      transition: background .4s ease;
+    }
+    .wizard-step.done::after  { background: var(--erp-primary); }
+    .wizard-step.active::after { background: var(--erp-border); }
+
+    .step-circle {
+      width: 36px; height: 36px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 700; flex-shrink: 0;
+      border: 2px solid var(--erp-border); background: var(--erp-white);
+      color: var(--erp-text-muted); transition: all .3s ease;
+    }
+    .wizard-step.done   .step-circle { background: var(--erp-primary); border-color: var(--erp-primary); color: #fff; }
+    .wizard-step.active .step-circle { border-color: var(--erp-primary); color: var(--erp-primary); background: color-mix(in srgb, var(--erp-primary) 8%, white); }
+
+    .step-label { line-height: 1.2; }
+    .step-label strong { font-size: 12.5px; font-weight: 600; color: var(--erp-dark); display: block; }
+    .step-label span   { font-size: 10.5px; color: var(--erp-text-muted); }
+    .wizard-step.active .step-label strong { color: var(--erp-primary); }
+
+    /* ── Step panels ── */
+    .step-panel { display: none; animation: erp-slideUp .35s ease both; }
+    .step-panel.active { display: block; }
+
+    /* ── Document upload area ── */
+    .upload-zone {
+      border: 2px dashed var(--erp-border); border-radius: var(--erp-radius);
+      padding: 28px; text-align: center; cursor: pointer;
+      transition: all var(--erp-transition);
+    }
+    .upload-zone:hover { border-color: var(--erp-primary); background: color-mix(in srgb, var(--erp-primary) 4%, white); }
+    .upload-zone i      { font-size: 32px; color: var(--erp-border); margin-bottom: 10px; display: block; }
+    .upload-zone:hover i { color: var(--erp-primary); }
+    .upload-zone p      { font-size: 13px; color: var(--erp-text-muted); margin-bottom: 4px; }
+    .upload-zone span   { font-size: 11px; color: var(--erp-text-muted); }
+
+    .doc-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 11px 14px; border: 1px solid var(--erp-border);
+      border-radius: var(--erp-radius); margin-bottom: 10px;
+    }
+    .doc-item-left { display: flex; align-items: center; gap: 10px; }
+    .doc-item-left i { font-size: 20px; color: var(--erp-primary); }
+    .doc-item-name  { font-size: 13px; font-weight: 600; color: var(--erp-dark); }
+    .doc-item-size  { font-size: 11px; color: var(--erp-text-muted); }
+
+    /* ── Review summary ── */
+    .review-section { margin-bottom: 20px; }
+    .review-section h4 { font-size: 12px; font-weight: 700; letter-spacing: 1.4px; text-transform: uppercase; color: var(--erp-text-muted); margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--erp-border); }
+    .review-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 24px; }
+    .review-field span:first-child { font-size: 11px; color: var(--erp-text-muted); font-weight: 600; letter-spacing: .3px; display: block; margin-bottom: 2px; }
+    .review-field span:last-child  { font-size: 13px; font-weight: 500; color: var(--erp-dark); }
+
+    /* ── Success state ── */
+    .success-card {
+      text-align: center; padding: 48px 32px;
+    }
+    .success-card .check-circle {
+      width: 72px; height: 72px; border-radius: 50%;
+      background: rgba(40,167,69,.12); color: var(--erp-success);
+      font-size: 32px; display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 20px;
+    }
+    .app-id {
+      display: inline-block; font-size: 18px; font-weight: 800;
+      font-family: monospace; letter-spacing: 3px;
+      color: var(--erp-primary); background: color-mix(in srgb, var(--erp-primary) 8%, white);
+      padding: 8px 24px; border-radius: var(--erp-radius);
+      border: 1.5px dashed var(--erp-primary); margin: 16px 0;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ════════════ SIDEBAR ════════════ -->
+<aside class="erp-sidebar">
+  <div class="erp-sidebar__brand">
+    <img class="erp-sidebar__logo" data-erp-logo="icon" alt="Logo" />
+    <div class="erp-sidebar__brand-text"><h2 data-erp-college-name="short"></h2><span>Admission Module</span></div>
+  </div>
+  <nav class="erp-sidebar__nav">
+    <div class="erp-nav-label">Admission</div>
+    <a class="erp-nav-item erp-nav-item--active" href="03-admission-form.html"><i class="fa-solid fa-file-pen"></i><span class="erp-nav-item__text">New Application</span></a>
+    <a class="erp-nav-item" href="#"><i class="fa-solid fa-list-check"></i><span class="erp-nav-item__text">All Applications</span><span class="erp-badge">34</span></a>
+    <a class="erp-nav-item" href="#"><i class="fa-solid fa-check-double"></i><span class="erp-nav-item__text">Approved</span></a>
+    <a class="erp-nav-item" href="#"><i class="fa-solid fa-clock"></i><span class="erp-nav-item__text">Pending Review</span></a>
+    <a class="erp-nav-item" href="#"><i class="fa-solid fa-xmark-circle"></i><span class="erp-nav-item__text">Rejected</span></a>
+    <div class="erp-nav-label">Navigation</div>
+    <a class="erp-nav-item" href="02-dashboard.html"><i class="fa-solid fa-gauge-high"></i><span class="erp-nav-item__text">Dashboard</span></a>
+    <a class="erp-nav-item" href="04-notifications.html"><i class="fa-solid fa-bell"></i><span class="erp-nav-item__text">Notifications</span></a>
+  </nav>
+  <div class="erp-sidebar__footer">
+    <div class="erp-avatar erp-avatar--md">AD</div>
+    <div class="erp-sidebar__user-info"><p>Admin User</p><span>Admission Officer</span></div>
+    <i class="fa-solid fa-right-from-bracket erp-sidebar__logout"></i>
+  </div>
+</aside>
+
+<!-- ════════════ TOPBAR ════════════ -->
+<header class="erp-topbar">
+  <button class="erp-topbar__btn" data-erp-sidebar-toggle><i class="fa-solid fa-bars"></i></button>
+  <nav class="erp-topbar__breadcrumb" data-erp-breadcrumb></nav>
+  <div class="erp-topbar__search">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <input type="text" placeholder="Search applications…" />
+  </div>
+  <div class="erp-topbar__actions">
+    <button class="erp-topbar__btn"><i class="fa-regular fa-bell"></i></button>
+  </div>
+  <div class="erp-topbar__profile">
+    <div class="erp-avatar erp-avatar--md">AD</div>
+    <div class="erp-profile-info"><p>Admin User</p><span>Admission Officer</span></div>
+  </div>
+</header>
+
+<!-- ════════════ MAIN ════════════ -->
+<main class="erp-main" data-erp-page="Admissions / New Application">
+
+  <div class="erp-page-title" style="display:flex;align-items:flex-start;justify-content:space-between">
+    <div>
+      <h1>New Admission Application</h1>
+      <p>Fill all sections and upload required documents</p>
+    </div>
+    <button class="erp-btn erp-btn--ghost erp-btn--sm" onclick="window.history.back()">
+      <i class="fa-solid fa-arrow-left"></i> Back
+    </button>
+  </div>
+
+  <div class="erp-card">
+    <div class="erp-card__body">
+
+      <!-- WIZARD STEPS -->
+      <div class="wizard-steps" id="wizardSteps">
+        <div class="wizard-step active" data-step="1">
+          <div class="step-circle">1</div>
+          <div class="step-label"><strong>Personal Info</strong><span>Name, DOB, contact</span></div>
+        </div>
+        <div class="wizard-step" data-step="2">
+          <div class="step-circle">2</div>
+          <div class="step-label"><strong>Academic</strong><span>Previous marks</span></div>
+        </div>
+        <div class="wizard-step" data-step="3">
+          <div class="step-circle">3</div>
+          <div class="step-label"><strong>Documents</strong><span>Upload files</span></div>
+        </div>
+        <div class="wizard-step" data-step="4">
+          <div class="step-circle">4</div>
+          <div class="step-label"><strong>Review</strong><span>Confirm &amp; submit</span></div>
+        </div>
+      </div>
+
+      <!-- ── STEP 1: Personal Info ── -->
+      <div class="step-panel active" id="step1">
+        <div class="erp-form-grid-3 erp-mb-5">
+          <div class="erp-form-group">
+            <label>First Name <sup style="color:var(--erp-danger)">*</sup></label>
+            <input class="erp-form-control" id="firstName" type="text" placeholder="Enter first name" required />
+          </div>
+          <div class="erp-form-group">
+            <label>Middle Name</label>
+            <input class="erp-form-control" type="text" placeholder="Enter middle name" />
+          </div>
+          <div class="erp-form-group">
+            <label>Last Name <sup style="color:var(--erp-danger)">*</sup></label>
+            <input class="erp-form-control" id="lastName" type="text" placeholder="Enter last name" required />
+          </div>
+          <div class="erp-form-group">
+            <label>Date of Birth <sup style="color:var(--erp-danger)">*</sup></label>
+            <input class="erp-form-control" id="dob" type="date" required />
+          </div>
+          <div class="erp-form-group">
+            <label>Gender <sup style="color:var(--erp-danger)">*</sup></label>
+            <select class="erp-form-control" id="gender" required>
+              <option value="">Select gender</option>
+              <option>Male</option><option>Female</option><option>Other</option>
+            </select>
+          </div>
+          <div class="erp-form-group">
+            <label>Category</label>
+            <select class="erp-form-control">
+              <option>Open / General</option><option>SC</option><option>ST</option>
+              <option>OBC</option><option>NT</option><option>EWS</option>
+            </select>
+          </div>
+          <div class="erp-form-group">
+            <label>Mobile Number <sup style="color:var(--erp-danger)">*</sup></label>
+            <input class="erp-form-control" id="mobile" type="tel" placeholder="+91 XXXXX XXXXX" required />
+          </div>
+          <div class="erp-form-group">
+            <label>Email Address <sup style="color:var(--erp-danger)">*</sup></label>
+            <input class="erp-form-control" id="email" type="email" placeholder="applicant@email.com" required />
+          </div>
+          <div class="erp-form-group">
+            <label>Aadhar Number</label>
+            <input class="erp-form-control" type="text" placeholder="XXXX XXXX XXXX" maxlength="14" />
+          </div>
+        </div>
+
+        <div style="background:var(--erp-surface);border-radius:var(--erp-radius);padding:16px 20px;margin-bottom:20px">
+          <div style="font-size:12px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--erp-text-muted);margin-bottom:14px">Permanent Address</div>
+          <div class="erp-form-grid-3">
+            <div class="erp-form-group" style="grid-column:1/-1">
+              <label>Address Line</label>
+              <input class="erp-form-control" type="text" placeholder="House no., Street, Area" />
+            </div>
+            <div class="erp-form-group">
+              <label>City / District</label>
+              <input class="erp-form-control" type="text" placeholder="City" />
+            </div>
+            <div class="erp-form-group">
+              <label>State</label>
+              <select class="erp-form-control">
+                <option>Maharashtra</option><option>Karnataka</option>
+                <option>Delhi</option><option>Tamil Nadu</option>
+              </select>
+            </div>
+            <div class="erp-form-group">
+              <label>PIN Code</label>
+              <input class="erp-form-control" type="text" placeholder="411001" maxlength="6" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── STEP 2: Academic ── -->
+      <div class="step-panel" id="step2">
+        <div class="erp-alert erp-alert--info erp-mb-4">
+          <i class="fa-solid fa-circle-info"></i>
+          <span>Enter marks as percentages. MHT-CET / JEE scores are used for merit ranking.</span>
+        </div>
+
+        <div style="font-size:12px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--erp-text-muted);margin-bottom:14px">10th Standard (SSC)</div>
+        <div class="erp-form-grid-3 erp-mb-5">
+          <div class="erp-form-group">
+            <label>Board <sup style="color:var(--erp-danger)">*</sup></label>
+            <select class="erp-form-control"><option>Maharashtra State Board</option><option>CBSE</option><option>ICSE</option></select>
+          </div>
+          <div class="erp-form-group">
+            <label>Year of Passing</label>
+            <input class="erp-form-control" type="number" placeholder="2022" min="2000" max="2025" />
+          </div>
+          <div class="erp-form-group">
+            <label>Percentage / Grade</label>
+            <input class="erp-form-control" type="text" placeholder="e.g. 92.40%" />
+          </div>
+        </div>
+
+        <div style="font-size:12px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--erp-text-muted);margin-bottom:14px">12th Standard (HSC)</div>
+        <div class="erp-form-grid-3 erp-mb-5">
+          <div class="erp-form-group">
+            <label>Board</label>
+            <select class="erp-form-control"><option>Maharashtra State Board</option><option>CBSE</option><option>ICSE</option></select>
+          </div>
+          <div class="erp-form-group">
+            <label>Year of Passing</label>
+            <input class="erp-form-control" type="number" placeholder="2024" min="2000" max="2026" />
+          </div>
+          <div class="erp-form-group">
+            <label>PCM Percentage <sup style="color:var(--erp-danger)">*</sup></label>
+            <input class="erp-form-control" type="text" placeholder="e.g. 87.20%" required />
+          </div>
+        </div>
+
+        <div style="font-size:12px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--erp-text-muted);margin-bottom:14px">Entrance Exam</div>
+        <div class="erp-form-grid-3 erp-mb-5">
+          <div class="erp-form-group">
+            <label>Exam Type</label>
+            <select class="erp-form-control" id="examType">
+              <option value="">Select exam</option>
+              <option>MHT-CET</option><option>JEE Main</option><option>JEE Advanced</option>
+            </select>
+          </div>
+          <div class="erp-form-group">
+            <label>Score / Percentile</label>
+            <input class="erp-form-control" type="text" placeholder="e.g. 145.20 / 95.8 percentile" />
+          </div>
+          <div class="erp-form-group">
+            <label>Application Number</label>
+            <input class="erp-form-control" type="text" placeholder="Exam application no." />
+          </div>
+        </div>
+
+        <div style="font-size:12px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--erp-text-muted);margin-bottom:14px">Programme Selection</div>
+        <div class="erp-form-grid-2">
+          <div class="erp-form-group">
+            <label>Preferred Course <sup style="color:var(--erp-danger)">*</sup></label>
+            <select class="erp-form-control">
+              <option>B.Tech — Computer Engineering</option>
+              <option>B.Tech — Mechanical Engineering</option>
+              <option>B.Tech — Electrical Engineering</option>
+              <option>B.Tech — Electronics &amp; Telecommunication</option>
+              <option>B.Tech — Information Technology</option>
+              <option>B.Tech — AI &amp; Data Science</option>
+            </select>
+          </div>
+          <div class="erp-form-group">
+            <label>Admission Type</label>
+            <select class="erp-form-control">
+              <option>CAP — Through CET Cell (Regular)</option>
+              <option>Direct Second Year (DSE)</option>
+              <option>Management Quota</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── STEP 3: Documents ── -->
+      <div class="step-panel" id="step3">
+        <div class="erp-form-grid-2 erp-mb-5">
+          <div>
+            <p style="font-size:12.5px;font-weight:600;color:var(--erp-dark);margin-bottom:12px">
+              <i class="fa-solid fa-circle-check" style="color:var(--erp-success)"></i> Uploaded Documents
+            </p>
+            <div class="doc-item">
+              <div class="doc-item-left"><i class="fa-solid fa-file-image"></i><div><div class="doc-item-name">passport_photo.jpg</div><div class="doc-item-size">128 KB · Image</div></div></div>
+              <span class="erp-pill erp-pill--active">Uploaded</span>
+            </div>
+            <div class="doc-item">
+              <div class="doc-item-left"><i class="fa-solid fa-file-pdf" style="color:var(--erp-danger)"></i><div><div class="doc-item-name">ssc_marksheet.pdf</div><div class="doc-item-size">340 KB · PDF</div></div></div>
+              <span class="erp-pill erp-pill--active">Uploaded</span>
+            </div>
+            <div class="doc-item" style="border-style:dashed;opacity:.6">
+              <div class="doc-item-left"><i class="fa-solid fa-file-circle-plus" style="color:var(--erp-text-muted)"></i><div><div class="doc-item-name">hsc_marksheet.pdf</div><div class="doc-item-size">Required</div></div></div>
+              <span class="erp-pill erp-pill--pending">Pending</span>
+            </div>
+            <div class="doc-item" style="border-style:dashed;opacity:.6">
+              <div class="doc-item-left"><i class="fa-solid fa-file-circle-plus" style="color:var(--erp-text-muted)"></i><div><div class="doc-item-name">caste_certificate.pdf</div><div class="doc-item-size">Required</div></div></div>
+              <span class="erp-pill erp-pill--pending">Pending</span>
+            </div>
+          </div>
+
+          <div>
+            <p style="font-size:12.5px;font-weight:600;color:var(--erp-dark);margin-bottom:12px">
+              <i class="fa-solid fa-upload" style="color:var(--erp-primary)"></i> Upload New Document
+            </p>
+            <div class="upload-zone" onclick="ERP.Toast.show('File picker opened (demo)','info')">
+              <i class="fa-solid fa-cloud-arrow-up"></i>
+              <p>Drag &amp; drop files or click to browse</p>
+              <span>PDF, JPG, PNG up to 5 MB each</span>
+            </div>
+            <div class="erp-form-group erp-mt-3">
+              <label>Document Type</label>
+              <select class="erp-form-control">
+                <option>Select document type</option>
+                <option>Passport Photo</option>
+                <option>SSC Marksheet</option>
+                <option>HSC Marksheet</option>
+                <option>CET Score Card</option>
+                <option>Aadhar Card</option>
+                <option>Caste Certificate</option>
+                <option>Transfer Certificate</option>
+                <option>Migration Certificate</option>
+              </select>
+            </div>
+            <button class="erp-btn erp-btn--outline erp-mt-3" style="width:100%;justify-content:center"
+                    onclick="ERP.Toast.show('Document uploaded successfully','success')">
+              <i class="fa-solid fa-upload"></i> Upload Document
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── STEP 4: Review ── -->
+      <div class="step-panel" id="step4">
+        <div class="erp-alert erp-alert--warning erp-mb-4">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+          <span>Please review all details carefully before submitting. Changes after submission require approval from the Admission Officer.</span>
+        </div>
+
+        <div class="review-section">
+          <h4>Personal Information</h4>
+          <div class="review-grid">
+            <div class="review-field"><span>Full Name</span><span>Alex Kumar Sharma</span></div>
+            <div class="review-field"><span>Date of Birth</span><span>15 June 2006</span></div>
+            <div class="review-field"><span>Gender</span><span>Male</span></div>
+            <div class="review-field"><span>Category</span><span>Open / General</span></div>
+            <div class="review-field"><span>Mobile</span><span>+91 98765 43210</span></div>
+            <div class="review-field"><span>Email</span><span>alex.kumar@gmail.com</span></div>
+          </div>
+        </div>
+
+        <div class="review-section">
+          <h4>Academic Details</h4>
+          <div class="review-grid">
+            <div class="review-field"><span>SSC Percentage</span><span>92.40%</span></div>
+            <div class="review-field"><span>HSC (PCM) %</span><span>87.20%</span></div>
+            <div class="review-field"><span>Entrance Exam</span><span>MHT-CET — 145.20 (95.8 %ile)</span></div>
+            <div class="review-field"><span>Preferred Course</span><span>B.Tech — Computer Engineering</span></div>
+          </div>
+        </div>
+
+        <div class="review-section">
+          <h4>Documents</h4>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <span class="erp-pill erp-pill--active"><i class="fa-solid fa-file-image"></i> Passport Photo</span>
+            <span class="erp-pill erp-pill--active"><i class="fa-solid fa-file-pdf"></i> SSC Marksheet</span>
+            <span class="erp-pill erp-pill--pending">HSC Marksheet (pending)</span>
+            <span class="erp-pill erp-pill--pending">Caste Certificate (pending)</span>
+          </div>
+        </div>
+
+        <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;color:var(--erp-text);cursor:pointer;margin-top:8px">
+          <input type="checkbox" id="declaration" style="accent-color:var(--erp-primary);width:16px;height:16px;margin-top:2px;flex-shrink:0" />
+          I hereby declare that all information furnished above is true and correct to the best of my knowledge. I understand that any false information may result in cancellation of admission.
+        </label>
+      </div>
+
+      <!-- ── STEP 5: Success ── -->
+      <div class="step-panel" id="step5">
+        <div class="success-card">
+          <div class="check-circle"><i class="fa-solid fa-check"></i></div>
+          <h2 style="font-size:22px;font-weight:700;color:var(--erp-dark)">Application Submitted!</h2>
+          <p style="color:var(--erp-text-muted);margin-top:8px;font-size:13.5px">Your admission application has been received and is under review.</p>
+          <div class="app-id">ADM-2025-04-8271</div>
+          <p style="font-size:12.5px;color:var(--erp-text-muted)">Save this application ID for future reference. A confirmation email has been sent.</p>
+          <div style="display:flex;gap:12px;justify-content:center;margin-top:24px">
+            <button class="erp-btn erp-btn--ghost" onclick="ERP.Toast.show('Application downloaded','success')">
+              <i class="fa-solid fa-download"></i> Download PDF
+            </button>
+            <a href="02-dashboard.html" class="erp-btn erp-btn--primary">
+              <i class="fa-solid fa-gauge-high"></i> Go to Dashboard
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- WIZARD NAVIGATION -->
+      <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--erp-border);padding-top:20px;margin-top:20px" id="wizardNav">
+        <button class="erp-btn erp-btn--ghost" id="btnPrev" onclick="prevStep()" style="visibility:hidden">
+          <i class="fa-solid fa-arrow-left"></i> Previous
+        </button>
+        <div style="font-size:12.5px;color:var(--erp-text-muted)" id="stepCounter">Step 1 of 4</div>
+        <button class="erp-btn erp-btn--primary" id="btnNext" onclick="nextStep()">
+          Next <i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </div>
+
+    </div>
+  </div>
+</main>
+
+<script src="../erp-theme.js"></script>
+<script>
+  let current = 1;
+  const total = 4;
+
+  function setStep(n) {
+    document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('step' + n).classList.add('active');
+
+    document.querySelectorAll('.wizard-step').forEach((s, i) => {
+      s.classList.remove('active', 'done');
+      if (i + 1 < n)  s.classList.add('done');
+      if (i + 1 === n) s.classList.add('active');
+    });
+
+    // Update step circles for done steps
+    document.querySelectorAll('.wizard-step.done .step-circle').forEach(c => {
+      if (!c.innerHTML.includes('fa-check')) c.innerHTML = '<i class="fa-solid fa-check"></i>';
+    });
+
+    document.getElementById('btnPrev').style.visibility = n > 1 ? 'visible' : 'hidden';
+    document.getElementById('stepCounter').textContent = n <= total ? `Step ${n} of ${total}` : '';
+
+    if (n === total) {
+      document.getElementById('btnNext').innerHTML = '<i class="fa-solid fa-paper-plane"></i> Submit Application';
+    } else if (n > total) {
+      document.getElementById('wizardNav').style.display = 'none';
+    } else {
+      document.getElementById('btnNext').innerHTML = 'Next <i class="fa-solid fa-arrow-right"></i>';
+    }
+  }
+
+  function nextStep() {
+    if (current === total) {
+      if (!document.getElementById('declaration')?.checked) {
+        ERP.Toast.show('Please accept the declaration to proceed', 'warning');
+        return;
+      }
+      ERP.Loader.show();
+      setTimeout(() => {
+        ERP.Loader.hide();
+        current = total + 1;
+        setStep(current);
+      }, 1400);
+      return;
+    }
+    current++;
+    setStep(current);
+  }
+
+  function prevStep() {
+    if (current > 1) { current--; setStep(current); }
+  }
+</script>
+</body>
+</html>

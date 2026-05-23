@@ -1,0 +1,35 @@
+/*
+ * PVG's College of Science & Commerce, Pune — College Config
+ *
+ * Load this AFTER erp-theme.css to apply PVGCOSC branding.
+ *
+ *   <link rel="stylesheet" href="path/to/erp-theme.css" />
+ *   <link rel="stylesheet" href="path/to/colleges/pvg/config.css" />
+ *
+ * The --erp-college variable is REQUIRED — erp-theme.js will show a
+ * blocking error page if it is missing or empty.
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+  /* ── Required: identifies this college to erp-theme.js ── */
+  --erp-college:       "pvg";
+  --erp-college-short: "PVGCOSC";
+  --erp-college-full:  "PVG's College of Science & Commerce, Pune";
+  --erp-college-url:   "https://www.pvgcosc.ac.in";
+
+  /* Paths resolved relative to the HTML page that loads this config */
+  --erp-college-icon:     "colleges/pvg/assets/icon.png";
+  --erp-college-wordmark: "colleges/pvg/assets/logo-wordmark.png";
+
+  /* ── Brand colours (from pvgcosc.ac.in) ── */
+  --erp-primary:        #881f42;
+  --erp-primary-dark:   #6b1634;
+  --erp-primary-light:  #a92755;
+  --erp-dark:           #2D2D2D;
+  --erp-accent:         #fdb90a;
+
+  /* ── Typography ── */
+  --erp-font: 'Poppins', sans-serif;
+}

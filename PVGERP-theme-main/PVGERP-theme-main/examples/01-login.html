@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login — College ERP</title>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+  <!-- 1. Generic theme -->
+  <link rel="stylesheet" href="../erp-theme.css" />
+  <!-- 2. College config (swap this line per college) -->
+  <link rel="stylesheet" href="../colleges/pvg/config.css" />
+
+  <style>
+    /* Auth pages use the erp-auth-page layout — no sidebar, no topbar */
+    .login-divider {
+      display: flex; align-items: center; gap: 12px;
+      margin: 20px 0; color: var(--erp-text-muted); font-size: 12px;
+    }
+    .login-divider::before,
+    .login-divider::after {
+      content: ''; flex: 1; height: 1px; background: var(--erp-border);
+    }
+    .brand-stats {
+      display: flex; gap: 32px; margin-top: 36px;
+      border-top: 1px solid rgba(255,255,255,.15); padding-top: 28px;
+    }
+    .brand-stat { text-align: center; }
+    .brand-stat strong { display: block; font-size: 22px; font-weight: 800; color: #fff; }
+    .brand-stat span   { font-size: 11px; color: rgba(255,255,255,.5); letter-spacing: .4px; }
+
+    .forgot-link {
+      font-size: 12px; color: var(--erp-primary); font-weight: 600;
+      float: right; margin-top: -4px;
+    }
+    .forgot-link:hover { text-decoration: underline; }
+
+    .back-to-top {
+      position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%);
+      font-size: 11px; color: rgba(255,255,255,.4);
+    }
+
+    .role-selector {
+      display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px;
+    }
+    .role-btn {
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      padding: 12px 8px; border-radius: var(--erp-radius);
+      border: 1.5px solid var(--erp-border); background: var(--erp-white);
+      cursor: pointer; transition: all var(--erp-transition); font-family: var(--erp-font);
+    }
+    .role-btn i       { font-size: 20px; color: var(--erp-text-muted); }
+    .role-btn span    { font-size: 11px; font-weight: 600; color: var(--erp-text-muted); }
+    .role-btn.active,
+    .role-btn:hover   { border-color: var(--erp-primary); background: color-mix(in srgb, var(--erp-primary) 6%, white); }
+    .role-btn.active i,
+    .role-btn:hover i { color: var(--erp-primary); }
+    .role-btn.active span,
+    .role-btn:hover span { color: var(--erp-primary); }
+  </style>
+</head>
+<body>
+
+<div class="erp-auth-page">
+
+  <!-- ══ Brand Panel ══ -->
+  <div class="erp-auth-page__brand" style="position:relative">
+    <img data-erp-logo="icon" alt="College Logo" />
+    <h1 data-erp-college-name="full"></h1>
+    <p>ERP Portal — Unified platform for students,<br>faculty and administration.</p>
+
+    <div class="brand-stats">
+      <div class="brand-stat"><strong>1,500+</strong><span>Students</span></div>
+      <div class="brand-stat"><strong>50+</strong><span>Faculty &amp; Staff</span></div>
+      <div class="brand-stat"><strong>10</strong><span>Programmes</span></div>
+    </div>
+
+    <span class="back-to-top" id="collegeUrl"></span>
+  </div>
+
+  <!-- ══ Form Panel ══ -->
+  <div class="erp-auth-page__form">
+    <div class="erp-auth-box">
+      <h2>Welcome back</h2>
+      <p>Sign in to access the ERP portal</p>
+
+      <!-- Role selector -->
+      <div class="role-selector">
+        <button class="role-btn active" onclick="setRole(this)">
+          <i class="fa-solid fa-user-graduate"></i>
+          <span>Student</span>
+        </button>
+        <button class="role-btn" onclick="setRole(this)">
+          <i class="fa-solid fa-chalkboard-user"></i>
+          <span>Faculty</span>
+        </button>
+        <button class="role-btn" onclick="setRole(this)">
+          <i class="fa-solid fa-user-shield"></i>
+          <span>Admin</span>
+        </button>
+      </div>
+
+      <form id="loginForm" novalidate>
+        <div class="erp-form-group erp-mb-4">
+          <label>Username / PRN <sup style="color:var(--erp-danger)">*</sup></label>
+          <div style="position:relative">
+            <i class="fa-solid fa-user" style="position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--erp-text-muted);font-size:13px"></i>
+            <input class="erp-form-control" id="username" type="text"
+                   placeholder="Enter PRN or username"
+                   style="padding-left:38px" required />
+          </div>
+        </div>
+
+        <div class="erp-form-group erp-mb-5">
+          <label>
+            Password <sup style="color:var(--erp-danger)">*</sup>
+            <a href="#" class="forgot-link">Forgot password?</a>
+          </label>
+          <div style="position:relative">
+            <i class="fa-solid fa-lock" style="position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--erp-text-muted);font-size:13px"></i>
+            <input class="erp-form-control" id="password" type="password"
+                   placeholder="Enter your password"
+                   style="padding-left:38px;padding-right:42px" required />
+            <button type="button" id="togglePwd"
+                    style="position:absolute;right:13px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--erp-text-muted);font-size:14px">
+              <i class="fa-regular fa-eye"></i>
+            </button>
+          </div>
+        </div>
+
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--erp-text);cursor:pointer;margin-bottom:20px">
+          <input type="checkbox" style="accent-color:var(--erp-primary);width:16px;height:16px" />
+          Keep me signed in
+        </label>
+
+        <button type="button" class="erp-btn erp-btn--primary" style="width:100%;justify-content:center"
+                onclick="handleLogin()">
+          <i class="fa-solid fa-right-to-bracket"></i>
+          Sign In
+        </button>
+      </form>
+
+      <div class="login-divider">or continue with</div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <button class="erp-btn erp-btn--ghost" style="justify-content:center;font-size:12px"
+                onclick="ERP.Toast.show('SSO login not configured','info')">
+          <i class="fa-solid fa-id-card"></i> College SSO
+        </button>
+        <button class="erp-btn erp-btn--ghost" style="justify-content:center;font-size:12px"
+                onclick="ERP.Toast.show('OTP sent to registered mobile','success')">
+          <i class="fa-solid fa-mobile-screen"></i> OTP Login
+        </button>
+      </div>
+
+      <p style="text-align:center;font-size:11.5px;color:var(--erp-text-muted);margin-top:28px">
+        Having trouble? Contact <a href="mailto:erp-support@college.ac.in" style="color:var(--erp-primary);font-weight:600">IT Support</a>
+      </p>
+    </div>
+  </div>
+
+</div>
+
+<script src="../erp-theme.js"></script>
+<script>
+  // Populate college URL footer once ERP.College.data is available
+  document.addEventListener('DOMContentLoaded', () => {
+    const el = document.getElementById('collegeUrl');
+    if (el && ERP.College.data) el.textContent = ERP.College.data.url.replace('https://', '');
+  });
+
+  function setRole(btn) {
+    document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+
+  document.getElementById('togglePwd').addEventListener('click', function () {
+    const pwd  = document.getElementById('password');
+    const icon = this.querySelector('i');
+    if (pwd.type === 'password') {
+      pwd.type = 'text';
+      icon.className = 'fa-regular fa-eye-slash';
+    } else {
+      pwd.type = 'password';
+      icon.className = 'fa-regular fa-eye';
+    }
+  });
+
+  function handleLogin() {
+    if (!ERP.Form.validate(document.getElementById('loginForm'))) return;
+    ERP.Loader.show();
+    setTimeout(() => {
+      ERP.Loader.hide();
+      ERP.Toast.show('Login successful! Redirecting…', 'success');
+    }, 1200);
+  }
+</script>
+</body>
+</html>

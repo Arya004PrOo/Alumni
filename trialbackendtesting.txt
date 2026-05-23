@@ -1,0 +1,7 @@
+ "full_name": "Rushikesh Shinde",
+  "email": "512302konkonkonkon@gmail.com",
+  "company": "Google",
+  "designation": "SDE",
+  "linkedin_url": "https://linkedin.com/in/worstplaceoninternet/profile",
+  "graduation_year": 2024,
+  "password": "teri@DPnahidikhrahi"

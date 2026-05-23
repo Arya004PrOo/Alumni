@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Notifications — College ERP</title>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="../erp-theme.css" />
+  <link rel="stylesheet" href="../colleges/pvg/config.css" />
+
+  <style>
+    /* ── Filter tabs ── */
+    .filter-tabs {
+      display: flex; gap: 4px;
+      background: var(--erp-surface); border-radius: 8px;
+      padding: 4px; border: 1px solid var(--erp-border);
+    }
+    .filter-tab {
+      padding: 7px 16px; border-radius: 6px; font-size: 12.5px; font-weight: 600;
+      cursor: pointer; color: var(--erp-text-muted);
+      transition: all var(--erp-transition); border: none; background: none;
+      font-family: var(--erp-font);
+    }
+    .filter-tab.active { background: var(--erp-white); color: var(--erp-primary); box-shadow: var(--erp-shadow-sm); }
+
+    /* ── Notification row ── */
+    .notif-row {
+      display: flex; align-items: flex-start; gap: 16px;
+      padding: 16px 20px; border-bottom: 1px solid #f0f2f5;
+      transition: background var(--erp-transition); cursor: pointer;
+    }
+    .notif-row:last-child  { border-bottom: none; }
+    .notif-row:hover       { background: var(--erp-surface); }
+    .notif-row.unread      { background: color-mix(in srgb, var(--erp-primary) 3%, white); }
+    .notif-row.unread:hover{ background: color-mix(in srgb, var(--erp-primary) 6%, white); }
+
+    .notif-icon {
+      width: 42px; height: 42px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; flex-shrink: 0;
+    }
+
+    .notif-body { flex: 1; min-width: 0; }
+    .notif-title { font-size: 13.5px; font-weight: 600; color: var(--erp-dark); display: flex; align-items: center; gap: 8px; }
+    .notif-title .unread-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--erp-primary); flex-shrink: 0; }
+    .notif-desc  { font-size: 12.5px; color: var(--erp-text-muted); margin-top: 3px; line-height: 1.5; }
+    .notif-meta  { display: flex; align-items: center; gap: 10px; margin-top: 6px; }
+    .notif-time  { font-size: 11px; color: var(--erp-text-muted); }
+    .notif-actions { display: flex; gap: 6px; }
+    .notif-action-btn {
+      font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 4px;
+      border: 1px solid var(--erp-border); background: var(--erp-white); cursor: pointer;
+      color: var(--erp-primary); font-family: var(--erp-font);
+      transition: all var(--erp-transition);
+    }
+    .notif-action-btn:hover { background: var(--erp-primary); color: #fff; border-color: var(--erp-primary); }
+
+    .notif-right { flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+    .notif-right button {
+      background: none; border: none; cursor: pointer;
+      color: var(--erp-text-muted); font-size: 14px; padding: 4px;
+      border-radius: 4px; transition: all var(--erp-transition);
+    }
+    .notif-right button:hover { background: var(--erp-border); color: var(--erp-dark); }
+
+    /* ── Compose panel ── */
+    .compose-section {
+      border-top: 3px solid var(--erp-primary);
+    }
+
+    /* ── Stats strip ── */
+    .notif-stats {
+      display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 24px;
+    }
+    .ns-card {
+      background: var(--erp-card); border: 1px solid var(--erp-border);
+      border-radius: var(--erp-radius); padding: 16px 18px;
+      box-shadow: var(--erp-shadow-sm);
+    }
+    .ns-card .ns-val { font-size: 26px; font-weight: 800; color: var(--erp-primary); line-height: 1; }
+    .ns-card .ns-lbl { font-size: 11.5px; color: var(--erp-text-muted); margin-top: 4px; }
+  </style>
+</head>
+<body>
+
+<!-- ════════════ SIDEBAR ════════════ -->
+<aside class="erp-sidebar">
+  <div class="erp-sidebar__brand">
+    <img class="erp-sidebar__logo" data-erp-logo="icon" alt="Logo" />
+    <div class="erp-sidebar__brand-text"><h2 data-erp-college-name="short"></h2><span>Notifications</span></div>
+  </div>
+  <nav class="erp-sidebar__nav">
+    <div class="erp-nav-label">Navigation</div>
+    <a class="erp-nav-item" href="02-dashboard.html"><i class="fa-solid fa-gauge-high"></i><span class="erp-nav-item__text">Dashboard</span></a>
+    <a class="erp-nav-item" href="03-admission-form.html"><i class="fa-solid fa-file-pen"></i><span class="erp-nav-item__text">Admissions</span></a>
+    <a class="erp-nav-item erp-nav-item--active" href="04-notifications.html"><i class="fa-solid fa-bell"></i><span class="erp-nav-item__text">Notifications</span><span class="erp-badge" id="sidebarBadge">5</span></a>
+    <div class="erp-nav-label">Send To</div>
+    <a class="erp-nav-item" href="#"><i class="fa-solid fa-users"></i><span class="erp-nav-item__text">All Students</span></a>
+    <a class="erp-nav-item" href="#"><i class="fa-solid fa-chalkboard-user"></i><span class="erp-nav-item__text">All Faculty</span></a>
+    <a class="erp-nav-item" href="#"><i class="fa-solid fa-building-columns"></i><span class="erp-nav-item__text">By Department</span></a>
+    <a class="erp-nav-item" href="#"><i class="fa-solid fa-user-graduate"></i><span class="erp-nav-item__text">By Batch / Year</span></a>
+  </nav>
+  <div class="erp-sidebar__footer">
+    <div class="erp-avatar erp-avatar--md">AD</div>
+    <div class="erp-sidebar__user-info"><p>Admin User</p><span>Super Admin</span></div>
+    <i class="fa-solid fa-right-from-bracket erp-sidebar__logout"></i>
+  </div>
+</aside>
+
+<!-- ════════════ TOPBAR ════════════ -->
+<header class="erp-topbar">
+  <button class="erp-topbar__btn" data-erp-sidebar-toggle><i class="fa-solid fa-bars"></i></button>
+  <nav class="erp-topbar__breadcrumb" data-erp-breadcrumb></nav>
+  <div class="erp-topbar__search">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <input type="text" id="searchInput" placeholder="Search notifications…"
+           oninput="filterNotifs(this.value)" />
+  </div>
+  <div class="erp-topbar__actions">
+    <button class="erp-topbar__btn" onclick="ERP.Toast.show('All notifications marked as read','success');markAllRead()">
+      <i class="fa-solid fa-check-double"></i>
+    </button>
+  </div>
+  <div class="erp-topbar__profile">
+    <div class="erp-avatar erp-avatar--md">AD</div>
+    <div class="erp-profile-info"><p>Admin User</p><span>Super Admin</span></div>
+  </div>
+</header>
+
+<!-- ════════════ MAIN ════════════ -->
+<main class="erp-main" data-erp-page="Notifications">
+
+  <div class="erp-page-title" style="display:flex;align-items:flex-start;justify-content:space-between">
+    <div>
+      <h1>Notifications</h1>
+      <p>Manage and send alerts to students, faculty and staff</p>
+    </div>
+    <button class="erp-btn erp-btn--primary" data-erp-modal-open="composeModal">
+      <i class="fa-solid fa-pen-to-square"></i> Compose
+    </button>
+  </div>
+
+  <!-- Stats strip -->
+  <div class="notif-stats">
+    <div class="ns-card"><div class="ns-val" id="statTotal">24</div><div class="ns-lbl">Total Today</div></div>
+    <div class="ns-card"><div class="ns-val" id="statUnread" style="color:var(--erp-primary)">5</div><div class="ns-lbl">Unread</div></div>
+    <div class="ns-card"><div class="ns-val" style="color:var(--erp-warning)">3</div><div class="ns-lbl">High Priority</div></div>
+    <div class="ns-card"><div class="ns-val" style="color:var(--erp-success)">1,240</div><div class="ns-lbl">Recipients Reached</div></div>
+  </div>
+
+  <!-- Filters + List -->
+  <div class="erp-card">
+    <div class="erp-card__header" style="flex-wrap:wrap;gap:12px">
+      <div class="filter-tabs" id="filterTabs">
+        <button class="filter-tab active" data-filter="all"      onclick="setFilter(this,'all')">All <span style="font-weight:400;margin-left:4px;opacity:.6">24</span></button>
+        <button class="filter-tab"        data-filter="unread"   onclick="setFilter(this,'unread')">Unread <span style="font-weight:400;margin-left:4px;opacity:.6">5</span></button>
+        <button class="filter-tab"        data-filter="alert"    onclick="setFilter(this,'alert')">Alerts</button>
+        <button class="filter-tab"        data-filter="academic" onclick="setFilter(this,'academic')">Academic</button>
+        <button class="filter-tab"        data-filter="fee"      onclick="setFilter(this,'fee')">Fees</button>
+        <button class="filter-tab"        data-filter="system"   onclick="setFilter(this,'system')">System</button>
+      </div>
+      <button class="erp-btn erp-btn--ghost erp-btn--sm" onclick="markAllRead()">
+        <i class="fa-solid fa-check-double"></i> Mark all read
+      </button>
+    </div>
+
+    <div id="notifList"></div>
+
+    <div style="padding:12px 20px;border-top:1px solid var(--erp-border);display:flex;align-items:center;justify-content:space-between">
+      <span style="font-size:12px;color:var(--erp-text-muted)" id="listFooter">Showing 8 of 24 notifications</span>
+      <button class="erp-btn erp-btn--ghost erp-btn--sm" onclick="ERP.Toast.show('Loading more…','info')">
+        Load more <i class="fa-solid fa-chevron-down"></i>
+      </button>
+    </div>
+  </div>
+
+</main>
+
+<!-- ════════════ COMPOSE MODAL ════════════ -->
+<div class="erp-modal-overlay" id="composeModal">
+  <div class="erp-modal" style="max-width:580px">
+    <div class="erp-modal__header erp-card compose-section" style="border-radius:0;border:none">
+      <span class="erp-modal__title"><i class="fa-solid fa-pen-to-square" style="margin-right:8px"></i>Compose Notification</span>
+      <button class="erp-modal__close" data-erp-modal-close><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="erp-modal__body">
+      <div class="erp-form-grid-2 erp-mb-4">
+        <div class="erp-form-group">
+          <label>Send To <sup style="color:var(--erp-danger)">*</sup></label>
+          <select class="erp-form-control">
+            <option>All Students</option>
+            <option>All Faculty</option>
+            <option>All Users</option>
+            <option>Specific Department</option>
+            <option>Specific Batch</option>
+          </select>
+        </div>
+        <div class="erp-form-group">
+          <label>Category</label>
+          <select class="erp-form-control">
+            <option>Academic</option>
+            <option>Fee / Finance</option>
+            <option>Exam / Results</option>
+            <option>Event</option>
+            <option>Placement</option>
+            <option>Alert / Urgent</option>
+            <option>System</option>
+          </select>
+        </div>
+      </div>
+      <div class="erp-form-group erp-mb-4">
+        <label>Notification Title <sup style="color:var(--erp-danger)">*</sup></label>
+        <input class="erp-form-control" id="composeTitle" type="text" placeholder="e.g. Mid-Semester Exam Schedule Released" required />
+      </div>
+      <div class="erp-form-group erp-mb-4">
+        <label>Message Body <sup style="color:var(--erp-danger)">*</sup></label>
+        <textarea class="erp-form-control" id="composeBody" rows="4" placeholder="Enter the full notification message…" required></textarea>
+      </div>
+      <div class="erp-form-grid-2 erp-mb-4">
+        <div class="erp-form-group">
+          <label>Priority</label>
+          <select class="erp-form-control">
+            <option>Normal</option>
+            <option>High</option>
+            <option>Urgent</option>
+          </select>
+        </div>
+        <div class="erp-form-group">
+          <label>Schedule (optional)</label>
+          <input class="erp-form-control" type="datetime-local" />
+          <span class="erp-form-hint">Leave blank to send immediately</span>
+        </div>
+      </div>
+      <div style="display:flex;gap:16px;flex-wrap:wrap">
+        <label style="display:flex;align-items:center;gap:7px;font-size:12.5px;cursor:pointer">
+          <input type="checkbox" checked style="accent-color:var(--erp-primary)"> In-app
+        </label>
+        <label style="display:flex;align-items:center;gap:7px;font-size:12.5px;cursor:pointer">
+          <input type="checkbox" style="accent-color:var(--erp-primary)"> Email
+        </label>
+        <label style="display:flex;align-items:center;gap:7px;font-size:12.5px;cursor:pointer">
+          <input type="checkbox" style="accent-color:var(--erp-primary)"> SMS
+        </label>
+        <label style="display:flex;align-items:center;gap:7px;font-size:12.5px;cursor:pointer">
+          <input type="checkbox" style="accent-color:var(--erp-primary)"> Push Notification
+        </label>
+      </div>
+    </div>
+    <div class="erp-modal__footer">
+      <button class="erp-btn erp-btn--ghost" data-erp-modal-close>Cancel</button>
+      <button class="erp-btn erp-btn--outline" onclick="ERP.Toast.show('Draft saved','info')">
+        <i class="fa-solid fa-floppy-disk"></i> Save Draft
+      </button>
+      <button class="erp-btn erp-btn--primary" id="sendBtn" onclick="sendNotification()">
+        <i class="fa-solid fa-paper-plane"></i> Send Now
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="../erp-theme.js"></script>
+<script>
+  const notifications = [
+    { id:1,  type:'alert',    unread:true,  icon:'fa-triangle-exclamation', iconClass:'amber',
+      title:'Fee Payment Deadline — 3 Days Remaining',
+      desc:'42 students have pending fee dues. Deadline is 15 Apr 2026. Accounts will be locked after this date.',
+      time:'10 minutes ago', priority:'high',
+      actions:['View Students','Send Reminder'] },
+    { id:2,  type:'academic', unread:true,  icon:'fa-file-pen', iconClass:'primary',
+      title:'Mid-Semester Exam Schedule Published',
+      desc:'Timetable for Computer Engineering Mid-Sem exams (7–12 Apr) has been published by the examination cell.',
+      time:'45 minutes ago', priority:'normal',
+      actions:['View Timetable'] },
+    { id:3,  type:'fee',      unread:true,  icon:'fa-indian-rupee-sign', iconClass:'green',
+      title:'Fee Receipt Generated — Alex Kumar',
+      desc:'₹55,000 received from Alex Kumar (ERP/CS/2025/001). Receipt #INV2025041 generated automatically.',
+      time:'1 hour ago', priority:'normal',
+      actions:['View Receipt'] },
+    { id:4,  type:'alert',    unread:true,  icon:'fa-user-minus', iconClass:'red',
+      title:'Attendance Alert — Below 75%',
+      desc:'Raj Desai (ERP/EE/2025/007) attendance is 68%. Auto-alert sent to student and guardian.',
+      time:'2 hours ago', priority:'high',
+      actions:['View Profile','Contact Guardian'] },
+    { id:5,  type:'academic', unread:true,  icon:'fa-briefcase', iconClass:'purple',
+      title:'Placement Drive — Infosys (11 Apr)',
+      desc:'Infosys campus placement drive scheduled on 11 Apr 2026 at Seminar Hall. Students of CS and IT Final Year are eligible.',
+      time:'3 hours ago', priority:'normal',
+      actions:['View Details','Register Students'] },
+    { id:6,  type:'system',   unread:false, icon:'fa-shield-halved', iconClass:'green',
+      title:'System Backup Completed',
+      desc:'Nightly database backup completed successfully at 02:00 AM. All data secured.',
+      time:'Yesterday, 2:04 AM', priority:'normal',
+      actions:[] },
+    { id:7,  type:'academic', unread:false, icon:'fa-calendar-days', iconClass:'primary',
+      title:'Academic Calendar Updated for April 2026',
+      desc:'The academic calendar has been updated. Holiday on 14 Apr (Dr. Ambedkar Jayanti) added.',
+      time:'Yesterday, 4:30 PM', priority:'normal',
+      actions:['View Calendar'] },
+    { id:8,  type:'fee',      unread:false, icon:'fa-file-invoice-dollar', iconClass:'amber',
+      title:'Monthly Fee Collection Report Ready',
+      desc:'Fee collection summary for March 2026 is ready. Total collected: ₹1.2 Cr. Download from Finance module.',
+      time:'2 days ago', priority:'normal',
+      actions:['Download Report'] },
+  ];
+
+  const iconColors = {
+    primary: { bg: 'rgba(26,86,219,.1)',   color: 'var(--erp-primary)' },
+    green:   { bg: 'rgba(40,167,69,.1)',   color: 'var(--erp-success)' },
+    amber:   { bg: 'rgba(255,193,7,.15)',  color: '#d4980b' },
+    red:     { bg: 'rgba(245,40,70,.1)',   color: 'var(--erp-danger)' },
+    purple:  { bg: 'rgba(139,92,246,.12)', color: '#7c3aed' },
+  };
+
+  let activeFilter = 'all';
+
+  function renderList(items) {
+    const list = document.getElementById('notifList');
+    if (!items.length) {
+      list.innerHTML = '<div style="padding:40px;text-align:center;color:var(--erp-text-muted)"><i class="fa-solid fa-bell-slash" style="font-size:32px;margin-bottom:12px;display:block;opacity:.3"></i>No notifications found</div>';
+      return;
+    }
+    list.innerHTML = items.map(n => {
+      const c = iconColors[n.iconClass];
+      const actions = n.actions.map(a =>
+        `<button class="notif-action-btn" onclick="event.stopPropagation();ERP.Toast.show('${a}','info')">${a}</button>`
+      ).join('');
+      return `
+        <div class="notif-row ${n.unread ? 'unread' : ''}" data-type="${n.type}" data-id="${n.id}" onclick="markRead(${n.id})">
+          <div class="notif-icon" style="background:${c.bg};color:${c.color}"><i class="fa-solid ${n.icon}"></i></div>
+          <div class="notif-body">
+            <div class="notif-title">
+              ${n.unread ? '<span class="unread-dot"></span>' : ''}
+              ${n.title}
+              ${n.priority === 'high' ? '<span class="erp-badge erp-badge--danger" style="font-size:9px">High</span>' : ''}
+            </div>
+            <div class="notif-desc">${n.desc}</div>
+            <div class="notif-meta">
+              <span class="notif-time"><i class="fa-regular fa-clock" style="font-size:10px"></i> ${n.time}</span>
+              <div class="notif-actions">${actions}</div>
+            </div>
+          </div>
+          <div class="notif-right">
+            <button title="Delete" onclick="event.stopPropagation();deleteNotif(${n.id})"><i class="fa-solid fa-xmark"></i></button>
+            ${n.unread ? `<button title="Mark read" onclick="event.stopPropagation();markRead(${n.id})"><i class="fa-solid fa-check"></i></button>` : ''}
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  function setFilter(btn, filter) {
+    activeFilter = filter;
+    document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    applyFilter();
+  }
+
+  function applyFilter() {
+    let items = notifications;
+    if (activeFilter === 'unread') items = items.filter(n => n.unread);
+    else if (activeFilter !== 'all') items = items.filter(n => n.type === activeFilter);
+    const q = document.getElementById('searchInput').value.toLowerCase();
+    if (q) items = items.filter(n => n.title.toLowerCase().includes(q) || n.desc.toLowerCase().includes(q));
+    renderList(items);
+    document.getElementById('listFooter').textContent = `Showing ${items.length} of ${notifications.length} notifications`;
+  }
+
+  function filterNotifs(q) { applyFilter(); }
+
+  function markRead(id) {
+    const n = notifications.find(x => x.id === id);
+    if (n && n.unread) {
+      n.unread = false;
+      applyFilter();
+      updateCounts();
+    }
+  }
+
+  function markAllRead() {
+    notifications.forEach(n => n.unread = false);
+    applyFilter();
+    updateCounts();
+    document.getElementById('sidebarBadge').style.display = 'none';
+  }
+
+  function deleteNotif(id) {
+    const idx = notifications.findIndex(x => x.id === id);
+    if (idx > -1) notifications.splice(idx, 1);
+    applyFilter();
+    updateCounts();
+    ERP.Toast.show('Notification deleted', 'info');
+  }
+
+  function updateCounts() {
+    const unread = notifications.filter(n => n.unread).length;
+    document.getElementById('statUnread').textContent = unread;
+    document.getElementById('statTotal').textContent  = notifications.length;
+    if (unread === 0) {
+      ERP.Notifications.setBadge(0);
+      document.getElementById('sidebarBadge').style.display = 'none';
+    } else {
+      document.getElementById('sidebarBadge').textContent = unread;
+    }
+  }
+
+  function sendNotification() {
+    const title = document.getElementById('composeTitle');
+    const body  = document.getElementById('composeBody');
+    if (!title.value.trim()) { ERP.Toast.show('Please enter a notification title','warning'); return; }
+    if (!body.value.trim())  { ERP.Toast.show('Please enter message body','warning'); return; }
+
+    ERP.Loader.show();
+    setTimeout(() => {
+      ERP.Loader.hide();
+      notifications.unshift({
+        id: Date.now(), type: 'academic', unread: false,
+        icon: 'fa-paper-plane', iconClass: 'primary',
+        title: title.value,
+        desc:  body.value,
+        time:  'Just now', priority: 'normal', actions: []
+      });
+      applyFilter(); updateCounts();
+      ERP.Modal.close('composeModal');
+      ERP.Toast.show('Notification sent to 1,240 recipients', 'success');
+      title.value = ''; body.value = '';
+    }, 1200);
+  }
+
+  // Init
+  renderList(notifications);
+</script>
+</body>
+</html>

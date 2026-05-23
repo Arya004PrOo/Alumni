@@ -1,0 +1,44 @@
+placement module
+---
+config:
+  layout: fixed
+---
+flowchart LR
+    ADMIN["ADMIN"] -- 1 --- R1{"Creates"} & R2{"Manages"} & R3{"Generates"}
+    R1 -- N --- DRIVE["PLACEMENT DRIVE"]
+    R2 -- N --- COMPANY["COMPANY"]
+    R3 -- N --- REPORT["REPORT"]
+    DRIVE -- 1 --- R4{"Has"} & R5{"Receives"} & R7{"Results In"}
+    R4 -- 1 --- ELIGIBILITY["ELIGIBILITY RULE"]
+    R5 -- N --- APPLICATION["STUDENT APPLICATION"]
+    APPLICATION -- 1 --- R6{"Tracks"}
+    R6 -- N --- STATUS["APPLICATION STATUS"]
+    R7 -- N --- OFFER["OFFER"]
+    COMPANY -- 1 --- R9{"Conducts"} & R8{"Signs"} & OFFER
+    R9 -- N --- DRIVE
+    R8 -- N --- MOU["MOU"]
+    STUDENT["STUDENT"] -- 1 --- R10{"Applies"} & R11{"Gets"}
+    R10 -- N --- APPLICATION
+    R11 -- N --- OFFER
+
+    style ADMIN stroke:#2962FF
+    style R1 stroke:#AA00FF
+    style R2 stroke:#AA00FF
+    style R3 stroke:#AA00FF
+    style DRIVE stroke:#2962FF
+    style COMPANY stroke:#2962FF
+    style REPORT stroke:#2962FF
+    style R4 stroke:#AA00FF
+    style R5 stroke:#AA00FF
+    style R7 stroke:#AA00FF
+    style ELIGIBILITY stroke:#2962FF
+    style APPLICATION stroke:#2962FF
+    style R6 stroke:#AA00FF
+    style STATUS stroke:#2962FF
+    style OFFER stroke:#2962FF
+    style R9 stroke:#AA00FF
+    style R8 stroke:#AA00FF
+    style MOU stroke:#2962FF
+    style STUDENT stroke:#2962FF
+    style R10 stroke:#AA00FF
+    style R11 stroke:#AA00FF

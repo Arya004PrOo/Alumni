@@ -1,0 +1,75 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: #ffffff;
+  --color-foreground: #020817;
+  --color-primary: var(--erp-primary);
+  --color-primary-foreground: #ffffff;
+  --color-destructive: var(--erp-danger);
+  --color-destructive-foreground: #ffffff;
+  --color-muted: var(--erp-surface);
+  --color-muted-foreground: var(--erp-text-muted);
+  --color-border: var(--erp-border);
+}
+
+:root {
+  /* Fix logo paths to use absolute URLs relative to the public folder */
+  --erp-college-icon: "/colleges/pvg/assets/goddess.png";
+  --erp-college-wordmark: "/colleges/pvg/assets/logo-wordmark.png";
+}
+
+body {
+  font-family: var(--erp-font);
+  background: var(--erp-surface);
+  color: var(--erp-text);
+  min-height: 100vh;
+}
+
+.erp-glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.erp-card-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.erp-card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--erp-shadow-lg);
+}
+
+.erp-app {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+}
+
+.erp-page-container {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* Ensure the main area stretches */
+.erp-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Fix sidebar logo cropping */
+.erp-sidebar__logo {
+  object-fit: contain !important;
+  padding: 4px;
+  background: #fff;
+}
+
+/* Data Table should use full width */
+.erp-table-container {
+  width: 100%;
+  overflow-x: auto;
+}
+

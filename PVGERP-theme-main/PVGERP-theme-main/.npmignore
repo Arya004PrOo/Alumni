@@ -1,0 +1,10 @@
+# Development files — not included in the published npm package
+examples/
+erp-theme.html
+assets/logos/README.md
+colleges/pvg/README.md
+scripts/
+.git/
+.gitignore
+*.md
+!README.md

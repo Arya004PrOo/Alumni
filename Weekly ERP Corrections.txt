@@ -1,0 +1,8 @@
+
+
+
+7Th March 
+pRn uid attach with hypen EX: if names are same but Ph numbers will be different there will be am unique id
+if possible create a drive_round table and attach it to the workflow 
+after its done ask LLM moduleto add all the DDL commands to insert into the queries
+instead of the report table create a View of it since it is not particularly required

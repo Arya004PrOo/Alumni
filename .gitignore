@@ -1,0 +1,42 @@
+# Dependencies
+**/node_modules/
+**/dist/
+**/dist-ssr/
+**/.output/
+**/.wrangler/
+
+# Python virtual environments and caches
+**/myenv/
+**/venv/
+**/.venv/
+**/env/
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.pyd
+**/.pytest_cache/
+
+# Databases
+**/*.db
+**/*.sqlite3
+
+# Local environment variables / Secrets
+**/.env
+**/.env.local
+**/.env.*.local
+**/.dev.vars
+
+# Archives and Executables
+**/*.zip
+**/*.rar
+**/*.exe
+
+# Editor directories and files
+.vscode/
+.idea/
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
