@@ -156,9 +156,8 @@ if ($FrontendOnly) {
     $startFrontend = $true
 }
 
-$processes = @()
-
 $executionBlock = {
+    $processes = @()
     try {
         if ($startBackend) {
             Write-Host "Starting FastAPI Backend Server on port 8009..." -ForegroundColor Cyan
