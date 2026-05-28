@@ -12,13 +12,14 @@ export default defineConfig({
   },
   server: {
     host: "0.0.0.0",
+    port: 5181,
     allowedHosts: true,
     proxy: {
-      '/alumni': 'http://127.0.0.1:8000',
-      '/student': 'http://127.0.0.1:8000',
-      '/admin': 'http://127.0.0.1:8000',
-      '/notifications': 'http://127.0.0.1:8000',
-      '/api': 'http://127.0.0.1:8000'
+      '/alumni': 'http://127.0.0.1:8009',
+      '/student': 'http://127.0.0.1:8009',
+      '/admin': 'http://127.0.0.1:8009',
+      '/notifications': 'http://127.0.0.1:8009',
+      '/api': 'http://127.0.0.1:8009'
     }
   }
 });

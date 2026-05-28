@@ -4,3 +4,10 @@ sqlalchemy
 pydantic
 python-multipart
 psycopg2-binary
+pyjwt
+requests
+cryptography
+python-dotenv
+httpx
+email-validator
+alembic
