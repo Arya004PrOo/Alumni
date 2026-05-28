@@ -26,10 +26,15 @@
 **/.env.*.local
 **/.dev.vars
 
-# Archives and Executables
+# Archives, Executables, and Binaries
 **/*.zip
 **/*.rar
 **/*.exe
+**/*.docx
+**/*.png
+**/*.jpg
+**/*.jpeg
+**/*.lockb
 
 # Editor directories and files
 .vscode/
