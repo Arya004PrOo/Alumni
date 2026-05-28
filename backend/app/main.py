@@ -20,7 +20,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-allowed_origins_str = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173")
+allowed_origins_str = os.getenv("ALLOWED_ORIGINS", "http://localhost:5181,http://127.0.0.1:5181")
 allowed_origins = [origin.strip() for origin in allowed_origins_str.split(",") if origin.strip()]
 
 app.add_middleware(
