@@ -19,7 +19,10 @@ export default defineConfig({
       '/student': 'http://127.0.0.1:8009',
       '/admin': 'http://127.0.0.1:8009',
       '/notifications': 'http://127.0.0.1:8009',
-      '/api': 'http://127.0.0.1:8009'
+      '/api': 'http://127.0.0.1:8009',
+      '/docs': 'http://127.0.0.1:8009',
+      '/redoc': 'http://127.0.0.1:8009',
+      '/openapi.json': 'http://127.0.0.1:8009'
     }
   }
 });
