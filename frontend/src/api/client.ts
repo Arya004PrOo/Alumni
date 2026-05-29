@@ -1,18 +1,20 @@
 import axios from "axios";
 
-export const client = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "",
+export const getAuthToken = () => localStorage.getItem("token");
+
+const client = axios.create({
+  baseURL: "", // Proxied to port 8009 by Vite
   headers: {
     "Content-Type": "application/json",
   },
 });
 
-// Request interceptor to inject JWT token dynamically from localStorage
+// Interceptor to inject the JWT Bearer token into headers dynamically
 client.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("token");
+    const token = getAuthToken();
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+      config.headers["Authorization"] = `Bearer ${token}`;
     }
     return config;
   },
@@ -21,19 +23,20 @@ client.interceptors.request.use(
   }
 );
 
-// Response interceptor to handle 401 Unauthorized globally
+// Interceptor to catch 401 Unauthorized errors and redirect users to the SSO portal
 client.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response && error.response.status === 401) {
-      console.warn("Session expired or invalid token. Redirecting to SSO portal...");
+      console.warn("Session expired or unauthorized. Redirecting to SSO portal...");
       localStorage.removeItem("token");
-      localStorage.removeItem("user");
       
-      const currentUrl = encodeURIComponent(window.location.href);
       const authUrl = import.meta.env.VITE_AUTH_URL || "https://automatic-certify-appointee.ngrok-free.dev";
+      const currentUrl = encodeURIComponent(window.location.href);
       window.location.href = `${authUrl}/login?redirect=${currentUrl}`;
     }
     return Promise.reject(error);
   }
 );
+
+export default client;

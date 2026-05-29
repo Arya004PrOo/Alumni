@@ -6,7 +6,7 @@ from app.database import get_db
 from app.models.alumni import Alumni, AlumniInvite
 from app.schemas.alumni import AlumniCreate, AlumniResponse, AlumniInviteCreate
 from app.utils.notifications import send_single_notification
-from app.utils.security import verify_token
+from app.api.v1.auth import verify_token
 
 router = APIRouter(prefix="/alumni", tags=["Alumni"], dependencies=[Depends(verify_token)])
 

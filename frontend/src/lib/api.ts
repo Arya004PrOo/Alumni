@@ -1,4 +1,4 @@
-import { client } from "../api/client";
+import client from "../api/client";
 
 export const API_BASE_URL = "";
 export const api = client;
@@ -12,14 +12,20 @@ export const setAuthToken = (token: string | null) => {
 };
 
 export interface AuthUser {
-  id: string;
+  id?: string | number;
+  user_id?: string | number;
   email: string;
-  role: "admin" | "student" | "alumni";
+  role: string;
   full_name?: string;
 }
 
+export const verifySession = async (): Promise<AuthUser> => {
+  const { data } = await api.get<AuthUser>("/api/v1/auth/me");
+  return data;
+};
+
 export const verifyToken = async (token: string): Promise<AuthUser> => {
-  const { data } = await api.get<AuthUser>("/api/users/me", {
+  const { data } = await api.get<AuthUser>("/api/v1/auth/me", {
     headers: { Authorization: `Bearer ${token}` }
   });
   return data;

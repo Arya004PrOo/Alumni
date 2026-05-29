@@ -2,7 +2,7 @@ from fastapi import APIRouter, Request, Response, HTTPException, Depends
 import httpx
 import os
 import logging
-from app.utils.security import verify_token
+from app.api.v1.auth import verify_token
 
 # Set up logging
 logger = logging.getLogger(__name__)

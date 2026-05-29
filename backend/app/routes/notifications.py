@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from typing import List, Optional
 from app.utils.notifications import send_bulk_notification, send_single_notification
-from app.utils.security import verify_token
+from app.api.v1.auth import verify_token
 
 router = APIRouter(prefix="/notifications", tags=["Notifications"], dependencies=[Depends(verify_token)])
 

@@ -1,106 +1,125 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
-import { useLocation } from "@tanstack/react-router";
-import { client } from "../api/client";
-
-export interface User {
-  user_id: number | string;
-  email: string;
-  role: string;
-  full_name?: string;
-}
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { verifySession, AuthUser } from "../lib/api";
 
 interface AuthContextType {
-  user: User | null;
+  user: AuthUser | null;
   role: string | null;
-  isLoading: boolean;
-  checkAuth: () => Promise<void>;
+  loading: boolean;
+  logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function useAuth() {
+export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider/AuthGate");
+    throw new Error("useAuth must be used within an AuthGate provider");
   }
   return context;
+};
+
+interface AuthGateProps {
+  children: React.ReactNode;
 }
 
-export function AuthGate({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [role, setRole] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const location = useLocation();
+export function AuthGate({ children }: AuthGateProps) {
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const checkAuth = async () => {
-    // 1. Process SSO callback token if present in URL query
+  const authUrl = import.meta.env.VITE_AUTH_URL || "https://automatic-certify-appointee.ngrok-free.dev";
+
+  const triggerRedirect = () => {
+    localStorage.removeItem("token");
+    const currentUrl = encodeURIComponent(window.location.href);
+    window.location.href = `${authUrl}/login?redirect=${currentUrl}`;
+  };
+
+  const logout = () => {
+    localStorage.removeItem("token");
+    setUser(null);
+    triggerRedirect();
+  };
+
+  const validate = async () => {
+    // 1. Grab token from URL parameter if present (SSO return)
     const params = new URLSearchParams(window.location.search);
     const tokenFromUrl = params.get("token");
+
     if (tokenFromUrl) {
-      console.log("AuthGate: New token detected in URL parameters.");
+      console.log("AuthGate: New SSO token detected, storing...");
       localStorage.setItem("token", tokenFromUrl);
-      // Immediately clean URL parameters to keep address bar clean
+      // Clean up URL parameters immediately
       window.history.replaceState({}, document.title, window.location.pathname);
     }
 
     const token = localStorage.getItem("token");
     if (!token) {
-      console.log("AuthGate: No token found. Redirecting to login...");
-      redirectToLogin();
+      console.warn("AuthGate: No token found. Redirecting to SSO...");
+      triggerRedirect();
       return;
     }
 
     try {
-      // 2. Request backend verification endpoint
-      const response = await client.get<User>("/api/v1/auth/me");
-      setUser(response.data);
-      setRole(response.data.role);
-      
-      // Save user profile state in local storage only as a cached view optimization
-      localStorage.setItem("user", JSON.stringify(response.data));
-      setIsLoading(false);
-    } catch (error: any) {
-      console.error("AuthGate: Token verification failed:", error);
-      if (error.response?.status === 401) {
-        // Axios interceptor will handle the redirection
-        return;
-      }
-      redirectToLogin();
+      // Validate token against backend /api/v1/auth/me
+      const profile = await verifySession();
+      setUser(profile);
+    } catch (err) {
+      console.error("AuthGate: Session verification failed.", err);
+      triggerRedirect();
+    } finally {
+      setLoading(false);
     }
   };
 
-  const redirectToLogin = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    const currentUrl = encodeURIComponent(window.location.href);
-    const authUrl = import.meta.env.VITE_AUTH_URL || "https://automatic-certify-appointee.ngrok-free.dev";
-    window.location.href = `${authUrl}/login?redirect=${currentUrl}`;
-  };
-
-  // Trigger validation on component mount and on each route navigation change
   useEffect(() => {
-    checkAuth();
-  }, [location.pathname]);
+    validate();
+    
+    // Setup listener for route changes (mount/unmount/history states)
+    const handleLocationChange = () => {
+      validate();
+    };
 
-  if (isLoading) {
+    window.addEventListener("popstate", handleLocationChange);
+    return () => {
+      window.removeEventListener("popstate", handleLocationChange);
+    };
+  }, []);
+
+  if (loading) {
     return (
-      <div style={{ 
-        height: "100vh", width: "100vw", display: "flex", flexDirection: "column", 
-        alignItems: "center", justifyContent: "center", background: "#f8fafc", fontFamily: "Inter, sans-serif" 
+      <div style={{
+        height: "100vh",
+        width: "100vw",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "#f8fafc",
+        fontFamily: "Inter, sans-serif"
       }}>
-        <div style={{ 
-          width: 50, height: 50, border: "4px solid #e2e8f0", borderTop: "4px solid #881f42", 
-          borderRadius: "50%", animation: "spin 1s linear infinite", marginBottom: 20 
+        <div style={{
+          width: 50,
+          height: 50,
+          border: "4px solid #e2e8f0",
+          borderTop: "4px solid #881f42",
+          borderRadius: "50%",
+          animation: "spin 1s linear infinite",
+          marginBottom: 20
         }}></div>
-        <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+        <style>{`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}</style>
         <h2 style={{ color: "#881f42", fontWeight: 700 }}>Verifying PVG Hub Session...</h2>
-        <p style={{ color: "#64748b", marginTop: 8 }}>Securing your connection...</p>
+        <p style={{ color: "#64748b", marginTop: 8 }}>Finalizing your secure login...</p>
       </div>
     );
   }
 
   return (
-    <AuthContext.Provider value={{ user, role, isLoading, checkAuth }}>
+    <AuthContext.Provider value={{ user, role: user?.role || null, loading, logout }}>
       {children}
     </AuthContext.Provider>
   );

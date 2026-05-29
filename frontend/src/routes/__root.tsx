@@ -1,6 +1,8 @@
 import { Outlet, Link, createRootRoute } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import appCss from "../styles.css?url";
 import { Toaster } from "sonner";
+
 import { AuthGate } from "../auth/AuthGate";
 
 function NotFoundComponent() {

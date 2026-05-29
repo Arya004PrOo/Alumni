@@ -10,7 +10,7 @@ from app.routes.admin_drive import router as admin_drive_router
 from app.routes.admin_round import router as admin_round_router
 from app.routes.admin_alumni import router as alumni_router
 from app.routes.notifications import router as notifications_router
-from app.routes.auth import router as auth_router
+from app.api.v1.auth import router as auth_router
 
 app = FastAPI(title="College ERP – Placement + Alumni Backend")
 
@@ -32,13 +32,23 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# API v1 prefixed routes
+app.include_router(auth_router, prefix="/api/v1")
+app.include_router(admin_company_router, prefix="/api/v1")
+app.include_router(student_router, prefix="/api/v1")
+app.include_router(admin_drive_router, prefix="/api/v1")
+app.include_router(admin_round_router, prefix="/api/v1")
+app.include_router(alumni_router, prefix="/api/v1")
+app.include_router(notifications_router, prefix="/api/v1")
+
+# Fallback unprefixed routes
+app.include_router(auth_router, prefix="/api")
 app.include_router(admin_company_router)
 app.include_router(student_router)
 app.include_router(admin_drive_router)
 app.include_router(admin_round_router)
 app.include_router(alumni_router)
 app.include_router(notifications_router)
-app.include_router(auth_router)
 
 
 @app.get("/")

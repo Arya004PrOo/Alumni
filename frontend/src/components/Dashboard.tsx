@@ -34,17 +34,24 @@ export function Dashboard() {
   const [selectedCompanyType, setSelectedCompanyType] = useState<string | null>(null);
   const [selectedBatch, setSelectedBatch] = useState<number | null>(null);
   const [batchFilter, setBatchFilter] = useState("");
-  const { user, role, isLoading } = useAuth();
-  const userRole = (role as "admin" | "student" | "alumni") || "admin";
-  const userData = user;
-  const authLoaded = !isLoading;
+  const [userRole, setUserRole] = useState<"admin" | "student" | "alumni">("admin");
+  const [userData, setUserData] = useState<any>(null);
+  const [authLoaded, setAuthLoaded] = useState(false);
   const { isCollapsed, toggle: toggleSidebar } = useSidebar();
 
+  const { user } = useAuth();
+
   useEffect(() => {
-    if (role === "student" && viewMode === "directory") {
-      setViewMode("dashboard");
+    if (user) {
+      setUserData(user);
+      setUserRole((user.role || "admin") as any);
+      setAuthLoaded(true);
+
+      if (user.role === "student" && viewMode === "directory") {
+        setViewMode("dashboard");
+      }
     }
-  }, [viewMode, role]);
+  }, [user, viewMode]);
 
   useEffect(() => {
     // Trigger ERP Theme injections once React has rendered the components
