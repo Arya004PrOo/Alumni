@@ -20,57 +20,59 @@ AUTH_API_URL = os.getenv("AUTH_API_URL")
 def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security_scheme)):
     token = credentials.credentials
 
-    # 1. Attempt remote verification if AUTH_API_URL is configured
-    if AUTH_API_URL:
-        try:
-            url = f"{AUTH_API_URL.rstrip('/')}/api/auth/verify"
-            response = requests.post(
-                url,
-                json={"token": token},
-                headers={"Content-Type": "application/json", "ngrok-skip-browser-warning": "69420"},
-                timeout=5.0
-            )
-            if response.status_code == 200:
-                data = response.json()
-                if data.get("valid"):
-                    payload = data.get("payload") or {}
-                    user_id = payload.get("user_id") or payload.get("id") or payload.get("sub")
-                    email = payload.get("email")
-                    role = payload.get("role")
-                    full_name = payload.get("full_name") or payload.get("username")
-
-                    if user_id and role:
-                        return {
-                            "user_id": user_id,
-                            "email": email,
-                            "role": role,
-                            "full_name": full_name
-                        }
-        except Exception as e:
-            print(f"Remote verification failed: {e}. Falling back to local verification.")
-
-    # 2. Fallback to local JWT verification
+    # 1. First, attempt local JWT signature verification using the JWT_SECRET
     try:
         payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
         user_id = payload.get("user_id") or payload.get("id") or payload.get("sub")
         email = payload.get("email")
         role = payload.get("role")
-        if not user_id or not role:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid token payload: missing user_id or role"
-            )
-        return {
-            "user_id": user_id,
-            "email": email,
-            "role": role,
-            "full_name": payload.get("full_name") or payload.get("username")
-        }
+        if user_id and role:
+            return {
+                "user_id": user_id,
+                "email": email,
+                "role": role,
+                "full_name": payload.get("full_name") or payload.get("username")
+            }
     except jwt.PyJWTError as e:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Invalid token: {e!s}"
-        )
+        print(f"Local JWT signature verification failed: {e}. Trying fallback remote verification.")
+
+    # 2. Fallback: GET request to Central Auth module's /api/v1/auth/me endpoint
+    auth_backend_url = os.getenv("AUTH_BACKEND_URL") or os.getenv("AUTH_API_URL")
+    if auth_backend_url:
+        try:
+            url = f"{auth_backend_url.rstrip('/')}/api/v1/auth/me"
+            response = requests.get(
+                url,
+                headers={
+                    "Authorization": f"Bearer {token}",
+                    "ngrok-skip-browser-warning": "69420"
+                },
+                timeout=5.0
+            )
+            if response.status_code == 200:
+                data = response.json()
+                # Resolve wrapped 'payload' or direct fields
+                payload = data.get("payload") if isinstance(data.get("payload"), dict) else data
+
+                user_id = payload.get("user_id") or payload.get("id") or payload.get("sub")
+                email = payload.get("email")
+                role = payload.get("role")
+                full_name = payload.get("full_name") or payload.get("username")
+
+                if user_id and role:
+                    return {
+                        "user_id": user_id,
+                        "email": email,
+                        "role": role,
+                        "full_name": full_name
+                    }
+        except Exception as exc:
+            print(f"Fallback remote verification request failed: {exc}")
+
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Invalid token or session expired"
+    )
 
 def require_roles(*allowed_roles: UserRole):
     def dependency(current_user: dict = Depends(verify_token)):

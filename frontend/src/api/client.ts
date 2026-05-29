@@ -1,6 +1,6 @@
 import axios from "axios";
 
-export const getAuthToken = () => localStorage.getItem("token");
+export const getAuthToken = () => localStorage.getItem("token") || sessionStorage.getItem("token");
 
 const client = axios.create({
   baseURL: "", // Proxied to port 8009 by Vite
@@ -30,6 +30,7 @@ client.interceptors.response.use(
     if (error.response && error.response.status === 401) {
       console.warn("Session expired or unauthorized. Redirecting to SSO portal...");
       localStorage.removeItem("token");
+      sessionStorage.removeItem("token");
       
       const authUrl = import.meta.env.VITE_AUTH_URL || "https://automatic-certify-appointee.ngrok-free.dev";
       const currentUrl = encodeURIComponent(window.location.href);

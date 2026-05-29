@@ -22,6 +22,22 @@ interface AuthGateProps {
   children: React.ReactNode;
 }
 
+function parseJwt(token: string) {
+  try {
+    const base64Url = token.split(".")[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const jsonPayload = decodeURIComponent(
+      window.atob(base64)
+        .split("")
+        .map(c => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join("")
+    );
+    return JSON.parse(jsonPayload);
+  } catch (e) {
+    return null;
+  }
+}
+
 export function AuthGate({ children }: AuthGateProps) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
@@ -30,12 +46,14 @@ export function AuthGate({ children }: AuthGateProps) {
 
   const triggerRedirect = () => {
     localStorage.removeItem("token");
+    sessionStorage.removeItem("token");
     const currentUrl = encodeURIComponent(window.location.href);
     window.location.href = `${authUrl}/login?redirect=${currentUrl}`;
   };
 
   const logout = () => {
     localStorage.removeItem("token");
+    sessionStorage.removeItem("token");
     setUser(null);
     triggerRedirect();
   };
@@ -48,21 +66,39 @@ export function AuthGate({ children }: AuthGateProps) {
     if (tokenFromUrl) {
       console.log("AuthGate: New SSO token detected, storing...");
       localStorage.setItem("token", tokenFromUrl);
+      sessionStorage.setItem("token", tokenFromUrl);
       // Clean up URL parameters immediately
       window.history.replaceState({}, document.title, window.location.pathname);
     }
 
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("token") || sessionStorage.getItem("token");
     if (!token) {
       console.warn("AuthGate: No token found. Redirecting to SSO...");
       triggerRedirect();
       return;
     }
 
+    // Sync token to both storage locations
+    if (!localStorage.getItem("token")) {
+      localStorage.setItem("token", token);
+    }
+    if (!sessionStorage.getItem("token")) {
+      sessionStorage.setItem("token", token);
+    }
+
     try {
+      // Base64 decode the JWT payload to read the user's role and details
+      const decoded = parseJwt(token);
+      const userRole = decoded?.role || "student";
+
       // Validate token against backend /api/v1/auth/me
       const profile = await verifySession();
-      setUser(profile);
+      
+      setUser({
+        ...profile,
+        role: profile.role || userRole,
+        email: profile.email || decoded?.email || "",
+      });
     } catch (err) {
       console.error("AuthGate: Session verification failed.", err);
       triggerRedirect();
