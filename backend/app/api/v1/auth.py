@@ -1,9 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-import jwt
 import os
+
+import jwt
 import requests
 from dotenv import load_dotenv
+from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+
 from app.core.roles import UserRole
 
 load_dotenv()
@@ -17,7 +19,7 @@ AUTH_API_URL = os.getenv("AUTH_API_URL")
 
 def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security_scheme)):
     token = credentials.credentials
-    
+
     # 1. Attempt remote verification if AUTH_API_URL is configured
     if AUTH_API_URL:
         try:
@@ -36,7 +38,7 @@ def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security_sc
                     email = payload.get("email")
                     role = payload.get("role")
                     full_name = payload.get("full_name") or payload.get("username")
-                    
+
                     if user_id and role:
                         return {
                             "user_id": user_id,
@@ -67,7 +69,7 @@ def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security_sc
     except jwt.PyJWTError as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Invalid token: {str(e)}"
+            detail=f"Invalid token: {e!s}"
         )
 
 def require_roles(*allowed_roles: UserRole):

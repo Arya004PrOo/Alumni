@@ -1,0 +1,48 @@
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+exclude = [
+    "migrations",
+    "myenv",
+    "scratch",
+    "check_students_cols.py",
+    "discover_api.py",
+    "drop_password_col.py",
+    "migrate.py",
+    "test_admission.py",
+    "test_notification.py"
+]
+
+[tool.ruff.lint]
+# Enable Pyflakes (F), pycodestyle (E, W), isort (I), pep8-naming (N), upgrade (UP), flake8-bugbear (B), flake8-quotes (Q), Ruff-specific rules (RUF)
+select = ["F", "E", "W", "I", "N", "UP", "B", "Q", "RUF"]
+ignore = [
+    "B008", # Do not perform function call Depends in argument defaults (FastAPI standard)
+    "E501", # Line too long
+    "B904", # Within an except clause, raise exceptions with raise ... from err
+    "E711", # Comparison to None should be cond is not None (False positive for SQLAlchemy)
+    "E402", # Module level import not at top of file (Intentional deferred imports)
+    "B006", # Do not use mutable data structures for argument defaults
+    "UP042" # Class UserRole inherits from both str and Enum (Required for Python 3.10 compatibility)
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Ignore unused imports in __init__.py files
+"__init__.py" = ["F401"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.mypy]
+python_version = "3.12"
+ignore_missing_imports = true
+check_untyped_defs = true
+disallow_untyped_defs = false
+disable_error_code = ["assignment", "list-item"]
+exclude = ["myenv", "migrations", "scratch", "check_students_cols.py", "discover_api.py", "drop_password_col.py", "migrate.py"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-v --cov=app --cov-report=term-missing"

@@ -1,9 +1,10 @@
-from fastapi import APIRouter, HTTPException, Depends
+
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
-from typing import List, Optional
-from app.utils.notifications import send_bulk_notification, send_single_notification
-from app.api.v1.auth import verify_token, require_roles
+
+from app.api.v1.auth import require_roles
 from app.core.roles import UserRole
+from app.utils.notifications import send_bulk_notification, send_single_notification
 
 router = APIRouter(prefix="/notifications", tags=["Notifications"], dependencies=[Depends(require_roles(UserRole.ADMIN))])
 
@@ -11,12 +12,12 @@ class BroadcastRequest(BaseModel):
     event_type: str
     title: str
     message: str
-    recipient_roles: Optional[List[str]] = None
-    recipient_emails: Optional[List[str]] = None
-    delivery_modes: List[str] = ["email", "sms", "whatsapp"]
-    department: Optional[str] = None
-    api_key: Optional[str] = None
-    module_name: Optional[str] = None
+    recipient_roles: list[str] | None = None
+    recipient_emails: list[str] | None = None
+    delivery_modes: list[str] = ["email", "sms", "whatsapp"]
+    department: str | None = None
+    api_key: str | None = None
+    module_name: str | None = None
 
 @router.post("/broadcast")
 def broadcast_notification(data: BroadcastRequest):
@@ -47,7 +48,7 @@ def broadcast_notification(data: BroadcastRequest):
                 api_key=data.api_key,
                 module_name=data.module_name
             )
-            
+
         if "error" in result:
             raise HTTPException(status_code=500, detail=result["error"])
         return {"message": "Notification sent successfully", "response": result}

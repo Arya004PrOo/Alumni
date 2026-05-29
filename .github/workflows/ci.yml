@@ -1,0 +1,66 @@
+name: CI Code Quality & Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  backend-checks:
+    name: Backend Lint, Type Check & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements.txt
+
+      - name: Run Ruff Linter
+        run: python -m ruff check backend/
+
+      - name: Run Ruff Formatter check
+        run: python -m ruff format --check backend/
+
+      - name: Run Mypy Type Checker
+        run: python -m mypy --config-file=backend/pyproject.toml backend/
+
+      - name: Run pytest
+        run: |
+          cd backend
+          python -m pytest --ignore=myenv
+
+  frontend-checks:
+    name: Frontend Type Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: |
+          cd frontend
+          npm ci
+
+      - name: Run TypeScript compiler check
+        run: |
+          cd frontend
+          npx tsc --noEmit

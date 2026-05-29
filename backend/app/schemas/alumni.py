@@ -1,27 +1,28 @@
+
 from pydantic import BaseModel, EmailStr
-from typing import Optional
+
 
 class AlumniCreate(BaseModel):
     full_name: str
     email: EmailStr
-    company: Optional[str] = None
-    designation: Optional[str] = None
-    company_type: Optional[str] = None
-    linkedin_url: Optional[str] = None
+    company: str | None = None
+    designation: str | None = None
+    company_type: str | None = None
+    linkedin_url: str | None = None
     graduation_year: int
-    skills: Optional[str] = None
+    skills: str | None = None
 
 
 class AlumniResponse(BaseModel):
     id: int
     full_name: str
     email: str
-    company: Optional[str]
-    designation: Optional[str]
-    company_type: Optional[str]
+    company: str | None
+    designation: str | None
+    company_type: str | None
     graduation_year: int
-    skills: Optional[str]
-    linkedin_url: Optional[str] = None
+    skills: str | None
+    linkedin_url: str | None = None
 
     class Config:
         from_attributes = True

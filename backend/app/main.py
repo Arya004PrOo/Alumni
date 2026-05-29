@@ -1,22 +1,21 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.v1.auth import router as auth_router
 from app.database import Base, engine
-from app.models import alumni
-
+from app.routes.admin_alumni import router as alumni_router
 from app.routes.admin_company import router as admin_company_router
-from app.routes.student import router as student_router
 from app.routes.admin_drive import router as admin_drive_router
 from app.routes.admin_round import router as admin_round_router
-from app.routes.admin_alumni import router as alumni_router
 from app.routes.notifications import router as notifications_router
-from app.api.v1.auth import router as auth_router
+from app.routes.student import router as student_router
 
-app = FastAPI(title="College ERP – Placement + Alumni Backend")
+app = FastAPI(title="College ERP - Placement + Alumni Backend")
 
 Base.metadata.create_all(bind=engine)
 
 import os
+
 from dotenv import load_dotenv
 
 load_dotenv()

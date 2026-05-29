@@ -1,15 +1,15 @@
+
 from pydantic import BaseModel, Field
-from typing import Optional
 
 
 class DriveRoundBase(BaseModel):
     sequence_no: int = Field(..., gt=0)
     round_name: str
     round_type: str
-    description: Optional[str] = None
+    description: str | None = None
     is_elimination_round: bool = True
     is_optional: bool = False
-    mode: Optional[str] = None
+    mode: str | None = None
 
 
 class DriveRoundCreate(DriveRoundBase):
@@ -17,13 +17,13 @@ class DriveRoundCreate(DriveRoundBase):
 
 
 class DriveRoundUpdate(BaseModel):
-    sequence_no: Optional[int] = None
-    round_name: Optional[str] = None
-    round_type: Optional[str] = None
-    description: Optional[str] = None
-    is_elimination_round: Optional[bool] = None
-    is_optional: Optional[bool] = None
-    mode: Optional[str] = None
+    sequence_no: int | None = None
+    round_name: str | None = None
+    round_type: str | None = None
+    description: str | None = None
+    is_elimination_round: bool | None = None
+    is_optional: bool | None = None
+    mode: str | None = None
 
 
 class DriveRoundResponse(DriveRoundBase):

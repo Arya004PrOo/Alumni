@@ -1,5 +1,6 @@
-from sqlalchemy import Column, Integer, String, DateTime, Text
+from sqlalchemy import Column, DateTime, Integer, String, Text
 from sqlalchemy.sql import func
+
 from app.database import Base
 
 
@@ -13,6 +14,6 @@ class Drive(Base):
     drive_date = Column(DateTime, nullable=False)
     location = Column(String(100))
     eligibility_criteria = Column(String(255))
-    
+
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())

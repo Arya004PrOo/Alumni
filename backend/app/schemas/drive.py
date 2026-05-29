@@ -1,30 +1,30 @@
-from pydantic import BaseModel
-from typing import Optional
 from datetime import datetime
+
+from pydantic import BaseModel
 
 
 class DriveCreate(BaseModel):
     company_id: int
     drive_name: str
-    description: Optional[str] = None
+    description: str | None = None
     drive_date: datetime
-    location: Optional[str] = None
-    eligibility_criteria: Optional[str] = None
+    location: str | None = None
+    eligibility_criteria: str | None = None
 
 
 class DriveUpdate(BaseModel):
-    company_id: Optional[int] = None
-    drive_name: Optional[str] = None
-    description: Optional[str] = None
-    drive_date: Optional[datetime] = None
-    location: Optional[str] = None
-    eligibility_criteria: Optional[str] = None
+    company_id: int | None = None
+    drive_name: str | None = None
+    description: str | None = None
+    drive_date: datetime | None = None
+    location: str | None = None
+    eligibility_criteria: str | None = None
 
 
 class DriveResponse(DriveCreate):
     id: int
     created_at: datetime
-    updated_at: Optional[datetime] = None   
+    updated_at: datetime | None = None
 
     class Config:
         from_attributes = True

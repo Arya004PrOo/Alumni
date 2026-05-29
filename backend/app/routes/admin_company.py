@@ -1,8 +1,10 @@
-from fastapi import APIRouter, Request, Response, HTTPException, Depends
-import httpx
-import os
 import logging
-from app.api.v1.auth import verify_token, require_roles
+import os
+
+import httpx
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
+
+from app.api.v1.auth import require_roles
 from app.core.roles import UserRole
 
 # Set up logging
@@ -17,12 +19,12 @@ async def forward_request(request: Request, target_url: str):
     body = await request.body()
     params = request.query_params
     headers = dict(request.headers)
-    
+
     # Remove host header to avoid routing mismatches at the destination
     headers.pop("host", None)
-    
+
     logger.info(f"Proxying {request.method} {request.url} -> {target_url}")
-    
+
     async with httpx.AsyncClient() as client:
         try:
             resp = await client.request(
@@ -33,11 +35,11 @@ async def forward_request(request: Request, target_url: str):
                 content=body,
                 timeout=10.0
             )
-            
+
             resp_headers = dict(resp.headers)
             # Remove content-length as it will be recalculated by uvicorn
             resp_headers.pop("content-length", None)
-            
+
             return Response(
                 content=resp.content,
                 status_code=resp.status_code,

@@ -1,5 +1,5 @@
+
 import requests
-from typing import List, Optional
 
 NOTIFICATION_URL = "https://tapering-gradation-quickness.ngrok-free.dev/api/module-notification"
 API_KEY = "ALUMNI_KEY_2026"
@@ -15,11 +15,11 @@ def send_bulk_notification(
     event_type: str,
     title: str,
     message: str,
-    recipient_roles: List[str] = ["student"],
-    delivery_modes: List[str] = ["email", "sms", "whatsapp"],
-    department: Optional[str] = None,
-    api_key: Optional[str] = None,
-    module_name: Optional[str] = None
+    recipient_roles: list[str] = ["student"],
+    delivery_modes: list[str] = ["email", "sms", "whatsapp"],
+    department: str | None = None,
+    api_key: str | None = None,
+    module_name: str | None = None
 ):
     """
     Sends bulk notifications to entire roles/departments.
@@ -39,8 +39,8 @@ def send_bulk_notification(
     try:
         print(f"DEBUG: Sending Bulk Notification Payload: {payload}")
         response = requests.post(
-            NOTIFICATION_URL, 
-            json=payload, 
+            NOTIFICATION_URL,
+            json=payload,
             headers=NGROK_HEADERS,
             timeout=30
         )
@@ -49,7 +49,7 @@ def send_bulk_notification(
     except requests.exceptions.Timeout:
         return {"error": "The notification service (Ngrok) is taking too long to respond. Please check if the tunnel is active."}
     except requests.exceptions.RequestException as e:
-        return {"error": f"Connection Error: {str(e)}"}
+        return {"error": f"Connection Error: {e!s}"}
     except Exception as e:
         return {"error": str(e)}
 
@@ -57,10 +57,10 @@ def send_single_notification(
     event_type: str,
     title: str,
     message: str,
-    recipient_emails: List[str],
-    delivery_modes: List[str] = ["email", "sms", "whatsapp"],
-    api_key: Optional[str] = None,
-    module_name: Optional[str] = None
+    recipient_emails: list[str],
+    delivery_modes: list[str] = ["email", "sms", "whatsapp"],
+    api_key: str | None = None,
+    module_name: str | None = None
 ):
     """
     Sends notification to specific users.
@@ -78,8 +78,8 @@ def send_single_notification(
     try:
         print(f"DEBUG: Sending Single Notification Payload: {payload}")
         response = requests.post(
-            NOTIFICATION_URL, 
-            json=payload, 
+            NOTIFICATION_URL,
+            json=payload,
             headers=NGROK_HEADERS,
             timeout=30
         )
@@ -88,6 +88,6 @@ def send_single_notification(
     except requests.exceptions.Timeout:
         return {"error": "The notification service (Ngrok) is taking too long to respond. Please check if the tunnel is active."}
     except requests.exceptions.RequestException as e:
-        return {"error": f"Connection Error: {str(e)}"}
+        return {"error": f"Connection Error: {e!s}"}
     except Exception as e:
         return {"error": str(e)}

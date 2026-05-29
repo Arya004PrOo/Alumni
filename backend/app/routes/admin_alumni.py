@@ -1,17 +1,17 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
 from sqlalchemy import func
+from sqlalchemy.orm import Session
 
+from app.api.v1.auth import require_roles
+from app.core.roles import UserRole
 from app.database import get_db
 from app.models.alumni import Alumni, AlumniInvite
-from app.schemas.alumni import AlumniCreate, AlumniResponse, AlumniInviteCreate
+from app.schemas.alumni import AlumniCreate, AlumniInviteCreate, AlumniResponse
 from app.utils.notifications import send_single_notification
-from app.api.v1.auth import verify_token, require_roles
-from app.core.roles import UserRole
 
 router = APIRouter(
-    prefix="/alumni", 
-    tags=["Alumni"], 
+    prefix="/alumni",
+    tags=["Alumni"],
     dependencies=[Depends(require_roles(UserRole.ADMIN, UserRole.STUDENT, UserRole.ALUMNI))]
 )
 
@@ -70,7 +70,7 @@ def invite_alumni(invite: AlumniInviteCreate, db: Session = Depends(get_db)):
     new_invite = AlumniInvite(email=invite.email, status="pending")
     db.add(new_invite)
     db.commit()
-    
+
     # Trigger Notification
     send_single_notification(
         event_type="Alumni Invitation",
@@ -93,7 +93,7 @@ def get_alumni_per_company(db: Session = Depends(get_db)):
     results = db.query(Alumni.company, func.count(Alumni.id).label("count")) \
                 .filter(Alumni.company != None, Alumni.company != "") \
                 .group_by(Alumni.company).all()
-    
+
     # Sort by count descending and take top companies
     sorted_results = sorted([{"name": r[0], "value": r[1]} for r in results], key=lambda x: x["value"], reverse=True)
     return sorted_results
@@ -105,24 +105,25 @@ def get_alumni_per_year(db: Session = Depends(get_db)):
                 .filter(Alumni.graduation_year != None) \
                 .group_by(Alumni.graduation_year) \
                 .order_by(Alumni.graduation_year).all()
-                
+
     return [{"name": str(r[0]), "value": r[1]} for r in results]
 
 
-from typing import Optional
-from fastapi.responses import StreamingResponse
-import io
 import csv
+import io
+
+from fastapi.responses import StreamingResponse
+
 
 @router.get("/export")
 def export_alumni_csv(
-    search: Optional[str] = None,
-    year: Optional[int] = None,
-    skill: Optional[str] = None,
+    search: str | None = None,
+    year: int | None = None,
+    skill: str | None = None,
     db: Session = Depends(get_db)
 ):
     query = db.query(Alumni)
-    
+
     if search:
         search_term = f"%{search}%"
         query = query.filter(
@@ -137,19 +138,19 @@ def export_alumni_csv(
         query = query.filter(Alumni.graduation_year == year)
     if skill:
         query = query.filter(Alumni.skills.ilike(f"%{skill}%"))
-        
+
     alumni = query.all()
-    
+
     output = io.StringIO()
     writer = csv.writer(output)
     writer.writerow(["ID", "Full Name", "Email", "Company", "Company Type", "Designation", "Graduation Year", "Skills", "LinkedIn"])
-    
+
     for a in alumni:
         writer.writerow([
-            a.id, a.full_name, a.email, a.company or "", a.company_type or "", a.designation or "", 
+            a.id, a.full_name, a.email, a.company or "", a.company_type or "", a.designation or "",
             a.graduation_year, a.skills or "", a.linkedin_url or ""
         ])
-        
+
     output.seek(0)
     return StreamingResponse(
         iter([output.getvalue()]),
@@ -160,15 +161,15 @@ def export_alumni_csv(
 
 @router.get("/", response_model=list[AlumniResponse])
 def get_all_alumni(
-    search: Optional[str] = None,
-    year: Optional[int] = None,
-    skill: Optional[str] = None,
-    sort_by: Optional[str] = None,
-    sort_order: Optional[str] = "asc",
+    search: str | None = None,
+    year: int | None = None,
+    skill: str | None = None,
+    sort_by: str | None = None,
+    sort_order: str | None = "asc",
     db: Session = Depends(get_db)
 ):
     query = db.query(Alumni)
-    
+
     if search:
         search_term = f"%{search}%"
         query = query.filter(
@@ -179,13 +180,13 @@ def get_all_alumni(
             (Alumni.designation.ilike(search_term)) |
             (Alumni.skills.ilike(search_term))
         )
-        
+
     if year:
         query = query.filter(Alumni.graduation_year == year)
-        
+
     if skill:
         query = query.filter(Alumni.skills.ilike(f"%{skill}%"))
-        
+
     if sort_by:
         column = getattr(Alumni, sort_by, None)
         if column:
@@ -193,7 +194,7 @@ def get_all_alumni(
                 query = query.order_by(column.desc())
             else:
                 query = query.order_by(column.asc())
-                
+
     return query.all()
 
 
@@ -202,7 +203,7 @@ def delete_alumni(alumni_id: int, db: Session = Depends(get_db)):
     alumni = db.query(Alumni).filter(Alumni.id == alumni_id).first()
     if not alumni:
         raise HTTPException(status_code=404, detail="Alumni not found")
-        
+
     db.delete(alumni)
     db.commit()
     return {"message": "Alumni deleted successfully"}
@@ -213,7 +214,7 @@ def update_alumni(alumni_id: int, alumni_data: AlumniCreate, db: Session = Depen
     db_alumni = db.query(Alumni).filter(Alumni.id == alumni_id).first()
     if not db_alumni:
         raise HTTPException(status_code=404, detail="Alumni not found")
-        
+
     # Update fields
     db_alumni.full_name = alumni_data.full_name
     db_alumni.email = alumni_data.email
@@ -223,7 +224,7 @@ def update_alumni(alumni_id: int, alumni_data: AlumniCreate, db: Session = Depen
     db_alumni.linkedin_url = alumni_data.linkedin_url
     db_alumni.graduation_year = alumni_data.graduation_year
     db_alumni.skills = alumni_data.skills
-    
+
     try:
         db.commit()
         db.refresh(db_alumni)
