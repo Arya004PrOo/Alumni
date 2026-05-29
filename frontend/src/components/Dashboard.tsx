@@ -9,6 +9,7 @@ import { Sidebar } from "./Sidebar";
 import { fetchAllAlumni, fetchAlumniCount, verifyToken, setAuthToken } from "../lib/api";
 import { useSidebar } from "../hooks/useSidebar";
 import { toast } from "sonner";
+import { useAuth } from "../auth/AuthGate";
 
 // define Alumni type locally to avoid import/type errors
 type Alumni = {
@@ -33,48 +34,17 @@ export function Dashboard() {
   const [selectedCompanyType, setSelectedCompanyType] = useState<string | null>(null);
   const [selectedBatch, setSelectedBatch] = useState<number | null>(null);
   const [batchFilter, setBatchFilter] = useState("");
-  const [userRole, setUserRole] = useState<"admin" | "student" | "alumni">("admin");
-  const [userData, setUserData] = useState<any>(null);
-  const [authLoaded, setAuthLoaded] = useState(false);
+  const { user, role, isLoading } = useAuth();
+  const userRole = (role as "admin" | "student" | "alumni") || "admin";
+  const userData = user;
+  const authLoaded = !isLoading;
   const { isCollapsed, toggle: toggleSidebar } = useSidebar();
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const token = localStorage.getItem("token");
-      const role = localStorage.getItem("role") as any;
-      const userId = localStorage.getItem("user_id");
-
-      if (token) {
-        setAuthToken(token);
-        
-        // Parse the full user data stored by the SSO logic in __root.tsx
-        const storedUser = localStorage.getItem("user");
-        if (storedUser) {
-          try {
-            const parsedUser = JSON.parse(storedUser);
-            setUserData(parsedUser);
-            setUserRole(parsedUser.role || role || "admin");
-          } catch (e) {
-            console.error("Failed to parse user data", e);
-            setUserRole(role || "admin");
-          }
-        } else {
-          setUserRole(role || "admin");
-        }
-        
-        if (role === "student" && viewMode === "directory") {
-          setViewMode("dashboard");
-        }
-      } else {
-        // No token found, user is not logged in via SSO
-        // For development/demo, we might still default to admin
-        setUserRole("admin");
-      }
-      setAuthLoaded(true);
-    };
-
-    checkAuth();
-  }, [viewMode]);
+    if (role === "student" && viewMode === "directory") {
+      setViewMode("dashboard");
+    }
+  }, [viewMode, role]);
 
   useEffect(() => {
     // Trigger ERP Theme injections once React has rendered the components

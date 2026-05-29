@@ -1,32 +1,13 @@
-import axios from "axios";
+import { client } from "../api/client";
 
 export const API_BASE_URL = "";
-
-export const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: { "Content-Type": "application/json" },
-});
-
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response && error.response.status === 401) {
-      console.warn("Unauthorized response. Redirecting to SSO login...");
-      localStorage.removeItem("token");
-      localStorage.removeItem("role");
-      localStorage.removeItem("user_id");
-      localStorage.removeItem("user");
-      window.location.href = "https://automatic-certify-appointee.ngrok-free.dev/login";
-    }
-    return Promise.reject(error);
-  }
-);
+export const api = client;
 
 export const setAuthToken = (token: string | null) => {
   if (token) {
-    api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+    localStorage.setItem("token", token);
   } else {
-    delete api.defaults.headers.common["Authorization"];
+    localStorage.removeItem("token");
   }
 };
 

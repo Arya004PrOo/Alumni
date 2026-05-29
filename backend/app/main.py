@@ -10,6 +10,7 @@ from app.routes.admin_drive import router as admin_drive_router
 from app.routes.admin_round import router as admin_round_router
 from app.routes.admin_alumni import router as alumni_router
 from app.routes.notifications import router as notifications_router
+from app.routes.auth import router as auth_router
 
 app = FastAPI(title="College ERP – Placement + Alumni Backend")
 
@@ -37,6 +38,7 @@ app.include_router(admin_drive_router)
 app.include_router(admin_round_router)
 app.include_router(alumni_router)
 app.include_router(notifications_router)
+app.include_router(auth_router)
 
 
 @app.get("/")
