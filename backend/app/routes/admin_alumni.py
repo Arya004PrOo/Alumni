@@ -6,12 +6,17 @@ from app.database import get_db
 from app.models.alumni import Alumni, AlumniInvite
 from app.schemas.alumni import AlumniCreate, AlumniResponse, AlumniInviteCreate
 from app.utils.notifications import send_single_notification
-from app.api.v1.auth import verify_token
+from app.api.v1.auth import verify_token, require_roles
+from app.core.roles import UserRole
 
-router = APIRouter(prefix="/alumni", tags=["Alumni"], dependencies=[Depends(verify_token)])
+router = APIRouter(
+    prefix="/alumni", 
+    tags=["Alumni"], 
+    dependencies=[Depends(require_roles(UserRole.ADMIN, UserRole.STUDENT, UserRole.ALUMNI))]
+)
 
 
-@router.post("/add", response_model=AlumniResponse)
+@router.post("/add", response_model=AlumniResponse, dependencies=[Depends(require_roles(UserRole.ADMIN))])
 def add_alumni(alumni: AlumniCreate, db: Session = Depends(get_db)):
     try:
         existing_email = db.query(Alumni).filter(Alumni.email == alumni.email).first()
@@ -50,7 +55,7 @@ def add_alumni(alumni: AlumniCreate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/invite")
+@router.post("/invite", dependencies=[Depends(require_roles(UserRole.ADMIN))])
 def invite_alumni(invite: AlumniInviteCreate, db: Session = Depends(get_db)):
     # Check if already alumni
     existing_alumni = db.query(Alumni).filter(Alumni.email == invite.email).first()
@@ -192,7 +197,7 @@ def get_all_alumni(
     return query.all()
 
 
-@router.delete("/{alumni_id}")
+@router.delete("/{alumni_id}", dependencies=[Depends(require_roles(UserRole.ADMIN))])
 def delete_alumni(alumni_id: int, db: Session = Depends(get_db)):
     alumni = db.query(Alumni).filter(Alumni.id == alumni_id).first()
     if not alumni:
@@ -203,7 +208,7 @@ def delete_alumni(alumni_id: int, db: Session = Depends(get_db)):
     return {"message": "Alumni deleted successfully"}
 
 
-@router.put("/{alumni_id}", response_model=AlumniResponse)
+@router.put("/{alumni_id}", response_model=AlumniResponse, dependencies=[Depends(require_roles(UserRole.ADMIN))])
 def update_alumni(alumni_id: int, alumni_data: AlumniCreate, db: Session = Depends(get_db)):
     db_alumni = db.query(Alumni).filter(Alumni.id == alumni_id).first()
     if not db_alumni:

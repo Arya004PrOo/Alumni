@@ -3,6 +3,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 import jwt
 import os
 from dotenv import load_dotenv
+from app.core.roles import UserRole
 
 load_dotenv()
 
@@ -35,6 +36,17 @@ def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security_sc
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"Invalid token: {str(e)}"
         )
+
+def require_roles(*allowed_roles: UserRole):
+    def dependency(current_user: dict = Depends(verify_token)):
+        user_role = current_user.get("role")
+        if user_role not in allowed_roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Permission denied: user role '{user_role}' is not authorized. Required: {[r.value for r in allowed_roles]}"
+            )
+        return current_user
+    return dependency
 
 @router.get("/auth/me")
 def get_me(current_user: dict = Depends(verify_token)):

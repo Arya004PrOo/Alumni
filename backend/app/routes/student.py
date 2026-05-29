@@ -3,9 +3,14 @@ from sqlalchemy.orm import Session
 from app.database import SessionLocal
 from app.models.student import Student
 from app.schemas.student import StudentCreate, StudentOut
-from app.api.v1.auth import verify_token
+from app.api.v1.auth import verify_token, require_roles
+from app.core.roles import UserRole
 
-router = APIRouter(prefix="/student", tags=["Student"])
+router = APIRouter(
+    prefix="/student", 
+    tags=["Student"], 
+    dependencies=[Depends(require_roles(UserRole.ADMIN, UserRole.STUDENT))]
+)
 
 # Database dependency
 def get_db():

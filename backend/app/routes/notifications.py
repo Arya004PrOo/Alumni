@@ -2,9 +2,10 @@ from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from typing import List, Optional
 from app.utils.notifications import send_bulk_notification, send_single_notification
-from app.api.v1.auth import verify_token
+from app.api.v1.auth import verify_token, require_roles
+from app.core.roles import UserRole
 
-router = APIRouter(prefix="/notifications", tags=["Notifications"], dependencies=[Depends(verify_token)])
+router = APIRouter(prefix="/notifications", tags=["Notifications"], dependencies=[Depends(require_roles(UserRole.ADMIN))])
 
 class BroadcastRequest(BaseModel):
     event_type: str

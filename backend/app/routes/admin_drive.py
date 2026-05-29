@@ -2,12 +2,13 @@ from fastapi import APIRouter, Request, Response, HTTPException, Depends
 import httpx
 import os
 import logging
-from app.api.v1.auth import verify_token
+from app.api.v1.auth import verify_token, require_roles
+from app.core.roles import UserRole
 
 # Set up logging
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/admin/drive", tags=["Admin - Drive Proxy"], dependencies=[Depends(verify_token)])
+router = APIRouter(prefix="/admin/drive", tags=["Admin - Drive Proxy"], dependencies=[Depends(require_roles(UserRole.ADMIN))])
 
 # Configuration
 PLACEMENT_API_URL = os.getenv("PLACEMENT_API_URL", "http://localhost:8001").rstrip("/")
